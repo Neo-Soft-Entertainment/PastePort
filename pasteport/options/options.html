@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurações — PastePort</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">P</span>
+          <div>
+            <strong>PastePort</strong>
+            <span>Configurações</span>
+          </div>
+        </div>
+        <p>Cole imagens em campos de upload sem precisar salvá-las antes.</p>
+      </header>
+
+      <form id="settings-form">
+        <section class="card" aria-labelledby="general-title">
+          <div class="card-heading">
+            <div>
+              <h1 id="general-title">Comportamento</h1>
+              <p>Defina quando o PastePort deve aparecer e como os arquivos são inseridos.</p>
+            </div>
+          </div>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Ativar PastePort</strong>
+              <small>Intercepta campos de upload compatíveis.</small>
+            </span>
+            <input id="enabled" type="checkbox">
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Somente uploads de imagem</strong>
+              <small>Evita campos que declaram aceitar outros tipos de arquivo.</small>
+            </span>
+            <input id="only-image-uploads" type="checkbox">
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Ativar drag-and-drop</strong>
+              <small>Permite arrastar imagens para a área de colagem.</small>
+            </span>
+            <input id="drag-drop-enabled" type="checkbox">
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Fechar após inserir</strong>
+              <small>Fecha o modal automaticamente quando o upload recebe os arquivos.</small>
+            </span>
+            <input id="close-after-insert" type="checkbox">
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Combinar arquivos existentes</strong>
+              <small>Em campos “multiple”, mantém a seleção atual e adiciona as novas imagens.</small>
+            </span>
+            <input id="combine-existing-files" type="checkbox">
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+        </section>
+
+        <section class="card" aria-labelledby="files-title">
+          <div class="card-heading">
+            <div>
+              <h2 id="files-title">Arquivos e aparência</h2>
+              <p>Configure limites, nomes gerados e o tema do modal.</p>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Limite máximo de arquivos</span>
+              <input id="max-files" type="number" min="1" max="100" required>
+            </label>
+
+            <label class="field">
+              <span>Nome padrão dos arquivos colados</span>
+              <input id="default-file-name" type="text" maxlength="80" placeholder="pasteport" required>
+            </label>
+
+            <label class="field">
+              <span>Tema</span>
+              <select id="theme">
+                <option value="auto">Automático</option>
+                <option value="light">Claro</option>
+                <option value="dark">Escuro</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="sites-title">
+          <div class="card-heading">
+            <div>
+              <h2 id="sites-title">Sites</h2>
+              <p>Informe um domínio por linha. Subdomínios também serão considerados.</p>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Sites ignorados</span>
+            <textarea id="ignored-sites" rows="5" placeholder="example.com&#10;admin.example.com"></textarea>
+            <small>O PastePort não registra interceptadores nem injeta o modal nesses domínios.</small>
+          </label>
+
+          <label class="field">
+            <span>Preferir seletor nativo</span>
+            <textarea id="prefer-native-sites" rows="5" placeholder="photos.example.com"></textarea>
+            <small>O comportamento original do upload é mantido nesses sites.</small>
+          </label>
+        </section>
+
+        <section class="card" aria-labelledby="advanced-title">
+          <div class="card-heading">
+            <div>
+              <h2 id="advanced-title">Avançado</h2>
+              <p>Use o modo de depuração somente ao investigar incompatibilidades.</p>
+            </div>
+          </div>
+
+          <label class="toggle-row">
+            <span>
+              <strong>Modo de depuração</strong>
+              <small>Exibe diagnósticos técnicos no console da página, sem registrar imagens.</small>
+            </span>
+            <input id="debug" type="checkbox">
+            <span class="toggle" aria-hidden="true"></span>
+          </label>
+        </section>
+
+        <section class="privacy">
+          <strong>Privacidade por padrão</strong>
+          <p>O PastePort processa tudo localmente, não monitora o clipboard e não envia imagens, telemetria ou dados de navegação.</p>
+        </section>
+
+        <div class="actions">
+          <p id="status" role="status" aria-live="polite"></p>
+          <button type="submit">Salvar configurações</button>
+        </div>
+      </form>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

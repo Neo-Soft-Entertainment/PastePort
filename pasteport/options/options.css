@@ -1,0 +1,359 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f3f5fa;
+  --card: #ffffff;
+  --surface: #f7f8fc;
+  --text: #172033;
+  --muted: #697386;
+  --border: #dfe3ec;
+  --accent: #635bff;
+  --accent-strong: #5148e5;
+  --success: #137a51;
+  --error: #b42318;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11131a;
+    --card: #191c26;
+    --surface: #222633;
+    --text: #f5f7ff;
+    --muted: #a9b1c4;
+    --border: #353b4c;
+    --accent: #8d87ff;
+    --accent-strong: #a19cff;
+    --success: #72d5a8;
+    --error: #ff9a91;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.page {
+  width: min(100% - 32px, 820px);
+  margin: 0 auto;
+  padding: 48px 0 70px;
+}
+
+.hero {
+  margin-bottom: 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #756eff, #4b43d9);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 10px 22px rgb(99 91 255 / 26%);
+}
+
+.brand div {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand strong {
+  font-size: 21px;
+  letter-spacing: -.02em;
+}
+
+.brand span:not(.logo) {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hero > p {
+  max-width: 580px;
+  margin: 18px 0 0;
+  color: var(--muted);
+}
+
+form {
+  display: grid;
+  gap: 18px;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 8px 28px rgb(24 32 51 / 5%);
+}
+
+.card-heading {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card h1,
+.card h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -.01em;
+}
+
+.card-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.toggle-row {
+  position: relative;
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 15px 24px;
+  cursor: pointer;
+}
+
+.toggle-row + .toggle-row {
+  border-top: 1px solid var(--border);
+}
+
+.toggle-row > span:first-child {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.toggle-row strong,
+.field > span {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.toggle-row small,
+.field small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.toggle-row input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #aeb5c3;
+  transition: background 140ms ease;
+}
+
+.toggle::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 24%);
+  content: "";
+  transition: transform 140ms ease;
+}
+
+.toggle-row input:checked + .toggle {
+  background: var(--accent);
+}
+
+.toggle-row input:checked + .toggle::after {
+  transform: translateX(18px);
+}
+
+.toggle-row input:focus-visible + .toggle {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 3px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 22px 24px 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0 24px 22px;
+}
+
+.field-grid .field {
+  padding: 0;
+}
+
+.field-grid .field:last-child {
+  grid-column: 1 / -1;
+}
+
+.card > .field:first-of-type {
+  padding-top: 22px;
+}
+
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.privacy {
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--card));
+}
+
+.privacy strong {
+  font-size: 14px;
+}
+
+.privacy p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 14px 0;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+#status {
+  margin: 0 auto 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#status.is-success {
+  color: var(--success);
+}
+
+#status.is-error {
+  color: var(--error);
+}
+
+button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  box-shadow: 0 7px 18px rgb(99 91 255 / 20%);
+}
+
+button:hover {
+  background: var(--accent-strong);
+}
+
+button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .page {
+    width: min(100% - 20px, 820px);
+    padding-top: 24px;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-grid .field:last-child {
+    grid-column: auto;
+  }
+
+  .toggle-row,
+  .card-heading,
+  .field-grid {
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+
+  .field {
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PastePort — testes manuais</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
+      }
+
+      body {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+
+      header {
+        margin-bottom: 28px;
+      }
+
+      .copy-test {
+        padding: 10px 15px;
+        border: 0;
+        border-radius: 8px;
+        background: #635bff;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: 16px;
+      }
+
+      section {
+        padding: 18px;
+        border: 1px solid #8886;
+        border-radius: 12px;
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 17px;
+      }
+
+      label,
+      button,
+      .dropzone {
+        cursor: pointer;
+      }
+
+      .button,
+      label[for] {
+        display: inline-block;
+        padding: 8px 12px;
+        border: 1px solid #8888;
+        border-radius: 7px;
+      }
+
+      .dropzone {
+        padding: 28px 12px;
+        border: 2px dashed #8888;
+        border-radius: 9px;
+        text-align: center;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      output {
+        display: block;
+        min-height: 22px;
+        margin-top: 10px;
+        color: #17a66b;
+        font-size: 13px;
+      }
+
+      iframe {
+        width: 100%;
+        min-height: 100px;
+        border: 1px solid #8886;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>PastePort — página de testes</h1>
+      <p>Use esta página por HTTP. O botão abaixo tenta colocar uma imagem PNG gerada localmente no clipboard.</p>
+      <button id="copy-test" class="copy-test" type="button">Copiar imagem PNG de teste</button>
+      <span id="copy-status" role="status"></span>
+    </header>
+
+    <main class="grid">
+      <section>
+        <h2>1. Input simples</h2>
+        <input type="file" data-output="simple-output">
+        <output id="simple-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>2. Input de imagem</h2>
+        <input type="file" accept="image/*" data-output="image-output">
+        <output id="image-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>3. Label associado</h2>
+        <label for="label-input">Enviar imagem</label>
+        <input id="label-input" class="hidden" type="file" accept="image/*" data-output="label-output">
+        <output id="label-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>4. Label aninhado</h2>
+        <label class="button">
+          Escolher foto
+          <input class="hidden" type="file" accept="image/*" data-output="nested-output">
+        </label>
+        <output id="nested-output">Nenhum arquivo</output>
+      </section>
+
+      <section class="upload-area">
+        <h2>5. Dropzone</h2>
+        <div class="dropzone">
+          Solte ou clique para enviar
+          <input class="hidden" type="file" accept="image/*" data-output="dropzone-output">
+        </div>
+        <output id="dropzone-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>6. Botão personalizado</h2>
+        <button id="custom-button" class="button" type="button">Abrir upload de imagem</button>
+        <input id="custom-input" class="hidden" type="file" accept="image/*" data-output="custom-output">
+        <output id="custom-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>7. PNG apenas</h2>
+        <input type="file" accept="image/png,.png" data-output="png-output">
+        <output id="png-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>8. Multiple</h2>
+        <input type="file" accept=".png,.jpg,.jpeg,.webp" multiple data-output="multiple-output">
+        <output id="multiple-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>9. Não imagem (deve permanecer nativo)</h2>
+        <input type="file" accept="application/pdf,.pdf" data-output="pdf-output">
+        <output id="pdf-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>10. Input dinâmico</h2>
+        <button id="dynamic-button" class="button" type="button">Criar upload de imagem</button>
+        <div id="dynamic-host"></div>
+        <output id="dynamic-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>11. Shadow DOM aberto</h2>
+        <div id="shadow-host"></div>
+        <output id="shadow-output">Nenhum arquivo</output>
+      </section>
+
+      <section>
+        <h2>12. iframe srcdoc</h2>
+        <iframe title="Upload em iframe" srcdoc='
+          <!doctype html>
+          <html lang="pt-BR">
+            <body style="font-family:system-ui">
+              <label for="frame-input">Enviar imagem no iframe</label>
+              <input id="frame-input" type="file" accept="image/*">
+              <output id="result">Nenhum arquivo</output>
+              <script>
+                document.querySelector("input").addEventListener("change", (event) => {
+                  document.querySelector("output").textContent =
+                    Array.from(event.target.files, (file) => file.name).join(", ");
+                });
+              <\/script>
+            </body>
+          </html>
+        '></iframe>
+      </section>
+    </main>
+
+    <script>
+      document.addEventListener("change", (event) => {
+        if (event.target.type !== "file") {
+          return;
+        }
+
+        const output = document.getElementById(event.target.dataset.output);
+        if (output) {
+          output.textContent = Array.from(event.target.files, (file) => file.name).join(", ");
+        }
+      });
+
+      document.querySelector("#custom-button").addEventListener("click", () => {
+        document.querySelector("#custom-input").click();
+      });
+
+      document.querySelector("#dynamic-button").addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.hidden = true;
+        input.dataset.output = "dynamic-output";
+        document.querySelector("#dynamic-host").replaceChildren(input);
+        input.click();
+      });
+
+      const shadowRoot = document.querySelector("#shadow-host").attachShadow({ mode: "open" });
+      shadowRoot.innerHTML = `
+        <style>
+          label { display:inline-block; padding:8px 12px; border:1px solid #8888; border-radius:7px; cursor:pointer }
+          input { display:none }
+        </style>
+        <label for="shadow-input">Enviar imagem no Shadow DOM</label>
+        <input id="shadow-input" type="file" accept="image/*">
+      `;
+      shadowRoot.querySelector("input").addEventListener("change", (event) => {
+        document.querySelector("#shadow-output").textContent =
+          Array.from(event.target.files, (file) => file.name).join(", ");
+      });
+
+      document.querySelector("#copy-test").addEventListener("click", async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 320;
+        canvas.height = 180;
+        const context = canvas.getContext("2d");
+        const gradient = context.createLinearGradient(0, 0, 320, 180);
+        gradient.addColorStop(0, "#756eff");
+        gradient.addColorStop(1, "#27c59a");
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "white";
+        context.font = "700 34px system-ui";
+        context.fillText("PastePort", 75, 103);
+
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        const copyStatus = document.querySelector("#copy-status");
+
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+          copyStatus.textContent = " Imagem copiada.";
+        } catch (error) {
+          copyStatus.textContent = " O navegador não permitiu copiar; copie outra imagem manualmente.";
+        }
+      });
+    </script>
+  </body>
+</html>
