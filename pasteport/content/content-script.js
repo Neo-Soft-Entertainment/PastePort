@@ -51,7 +51,7 @@
 
   function extensionContextAvailable() {
     try {
-      return Boolean(chrome.runtime?.id && chrome.runtime.getURL(""));
+      return Boolean(chrome.runtime?.id);
     } catch (error) {
       return false;
     }

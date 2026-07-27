@@ -1,6 +1,13 @@
 (() => {
   "use strict";
 
+  let stylesheetUrl;
+  try {
+    stylesheetUrl = chrome.runtime.getURL("content/styles.css");
+  } catch (error) {
+    return;
+  }
+
   function createModal({
     input,
     anchor,
@@ -13,13 +20,6 @@
     onNativePicker,
     onClose
   }) {
-    let stylesheetUrl;
-    try {
-      stylesheetUrl = chrome.runtime.getURL("content/styles.css");
-    } catch (error) {
-      return null;
-    }
-
     let previousFocus = document.activeElement;
     while (previousFocus?.shadowRoot?.activeElement) {
       previousFocus = previousFocus.shadowRoot.activeElement;
