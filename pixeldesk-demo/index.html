@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PixelDesk — organize e gerencie imagens dos seus projetos.">
+  <title>Biblioteca de imagens | PixelDesk</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="app-sidebar" aria-label="Navegação principal">
+      <a class="brand" href="#" aria-label="PixelDesk — página inicial">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span>
+          <span></span>
+        </span>
+        <span>PixelDesk</span>
+      </a>
+
+      <nav class="sidebar-nav" aria-label="Seções">
+        <a href="#" class="nav-item">
+          <span class="nav-icon" aria-hidden="true">⌂</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item is-active" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">▣</span>
+          <span>Biblioteca</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon" aria-hidden="true">◇</span>
+          <span>Projetos</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon" aria-hidden="true">♧</span>
+          <span>Compartilhados</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon" aria-hidden="true">⌫</span>
+          <span>Lixeira</span>
+        </a>
+        <a href="#" class="nav-item nav-settings">
+          <span class="nav-icon" aria-hidden="true">⚙</span>
+          <span>Configurações</span>
+        </a>
+      </nav>
+
+      <section class="storage-card" aria-label="Uso de armazenamento">
+        <div class="storage-heading">
+          <span class="storage-icon" aria-hidden="true">▤</span>
+          <strong>Armazenamento</strong>
+        </div>
+        <div class="storage-track" aria-hidden="true">
+          <span></span>
+        </div>
+        <p><strong>2,4 GB</strong> de 10 GB usados</p>
+      </section>
+    </aside>
+    <button class="mobile-backdrop" id="mobile-backdrop" type="button" aria-label="Fechar menu"></button>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-title">
+          <button
+            class="mobile-menu"
+            id="mobile-menu"
+            type="button"
+            aria-label="Abrir menu"
+            aria-controls="app-sidebar"
+            aria-expanded="false"
+          >☰</button>
+          <span>Biblioteca de imagens</span>
+        </div>
+
+        <div class="topbar-actions">
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <span class="sr-only">Pesquisar imagens</span>
+            <input type="search" placeholder="Pesquisar imagens" aria-label="Pesquisar imagens">
+            <kbd>⌘ K</kbd>
+          </label>
+          <button class="icon-button" type="button" aria-label="Notificações">
+            <span aria-hidden="true">♢</span>
+            <span class="notification-dot"></span>
+          </button>
+          <button class="profile-button" type="button" aria-label="Abrir perfil de Victor Henrique">
+            <span class="avatar">VH</span>
+            <span class="profile-copy">
+              <strong>Victor Henrique</strong>
+              <small>Administrador</small>
+            </span>
+            <span aria-hidden="true">⌄</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <div class="content-frame">
+          <section class="guide-banner" id="guide-banner" aria-label="Como adicionar uma imagem" hidden>
+            <div class="guide-intro">
+              <span class="guide-mark" aria-hidden="true">P</span>
+              <div>
+                <strong>Adicione imagens sem interromper seu fluxo</strong>
+                <span>Com PastePort, bastam três passos.</span>
+              </div>
+            </div>
+            <ol>
+              <li><span>1</span>Copie uma imagem</li>
+              <li><span>2</span>Clique em Adicionar imagem</li>
+              <li><span>3</span>Pressione Ctrl + V</li>
+            </ol>
+          </section>
+
+          <section class="page-heading" aria-labelledby="page-title">
+            <div>
+              <p class="eyebrow">Biblioteca</p>
+              <h1 id="page-title">Biblioteca de imagens</h1>
+              <p>Organize, envie e gerencie os arquivos visuais dos seus projetos.</p>
+            </div>
+            <div class="top-upload-control file-picker image-picker">
+              <button class="primary-button" id="top-upload-button" type="button">
+                <span aria-hidden="true">＋</span>
+                Adicionar imagem
+              </button>
+              <input
+                id="top-image-upload"
+                class="hidden-file-input"
+                type="file"
+                accept="image/*"
+                tabindex="-1"
+                aria-label="Adicionar imagem pelo seletor de arquivos"
+              >
+            </div>
+          </section>
+
+          <section class="upload-card" aria-labelledby="upload-title">
+            <div
+              class="upload-area image-uploader dropzone file-picker"
+              id="main-dropzone"
+              data-dropzone="image-upload"
+            >
+              <input
+                id="main-image-upload"
+                class="hidden-file-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                tabindex="-1"
+                aria-describedby="upload-formats upload-feedback"
+              >
+              <label class="upload-label" for="main-image-upload" tabindex="0">
+                <span class="upload-default" id="upload-default">
+                  <span class="upload-icon" aria-hidden="true">
+                    <span class="picture-sun"></span>
+                    <span class="picture-mountain"></span>
+                  </span>
+                  <span class="upload-copy">
+                    <strong id="upload-title">Envie uma nova imagem</strong>
+                    <span id="drop-instruction">Arraste uma imagem para esta área ou selecione um arquivo do computador</span>
+                  </span>
+                  <span class="upload-select-button">Selecionar imagem</span>
+                  <small id="upload-formats">PNG, JPEG, WebP ou GIF — máximo de 10 MB</small>
+                </span>
+
+                <span class="upload-result" id="upload-result" hidden>
+                  <span class="uploaded-preview">
+                    <img id="uploaded-image" alt="Prévia da imagem adicionada">
+                    <span class="success-badge" aria-hidden="true">✓</span>
+                  </span>
+                  <span class="uploaded-details">
+                    <span class="success-label"><span aria-hidden="true">●</span> Upload concluído</span>
+                    <strong>Imagem adicionada</strong>
+                    <span id="uploaded-filename"></span>
+                    <small id="uploaded-metadata"></small>
+                  </span>
+                  <span class="replace-button">Trocar imagem</span>
+                </span>
+              </label>
+              <p class="upload-feedback" id="upload-feedback" role="status" aria-live="polite"></p>
+            </div>
+          </section>
+
+          <section class="recent-section" aria-labelledby="recent-title">
+            <div class="section-heading">
+              <div>
+                <h2 id="recent-title">Imagens recentes</h2>
+                <span id="asset-count">24 arquivos</span>
+              </div>
+              <button class="text-button" type="button">Ver biblioteca <span aria-hidden="true">→</span></button>
+            </div>
+
+            <div class="asset-grid" id="asset-grid">
+              <article class="asset-card">
+                <div class="asset-preview preview-product" role="img" aria-label="Composição abstrata de um produto">
+                  <span class="abstract-orb"></span>
+                  <span class="abstract-card"></span>
+                  <span class="abstract-line"></span>
+                </div>
+                <div class="asset-info">
+                  <div>
+                    <strong>product-cover.png</strong>
+                    <span>1600 × 1200 · 2,8 MB</span>
+                  </div>
+                  <button type="button" aria-label="Mais opções para product-cover.png">•••</button>
+                </div>
+              </article>
+
+              <article class="asset-card">
+                <div class="asset-preview preview-dashboard" role="img" aria-label="Composição abstrata de um dashboard">
+                  <span class="dashboard-sidebar"></span>
+                  <span class="dashboard-header"></span>
+                  <span class="dashboard-chart"></span>
+                  <span class="dashboard-bars"></span>
+                </div>
+                <div class="asset-info">
+                  <div>
+                    <strong>dashboard-preview.jpg</strong>
+                    <span>1440 × 900 · 1,6 MB</span>
+                  </div>
+                  <button type="button" aria-label="Mais opções para dashboard-preview.jpg">•••</button>
+                </div>
+              </article>
+
+              <article class="asset-card">
+                <div class="asset-preview preview-brand" role="img" aria-label="Composição abstrata de elementos de marca">
+                  <span class="brand-shape brand-shape-one"></span>
+                  <span class="brand-shape brand-shape-two"></span>
+                  <span class="brand-shape brand-shape-three"></span>
+                  <span class="brand-letter">P</span>
+                </div>
+                <div class="asset-info">
+                  <div>
+                    <strong>brand-assets.webp</strong>
+                    <span>2048 × 1536 · 3,4 MB</span>
+                  </div>
+                  <button type="button" aria-label="Mais opções para brand-assets.webp">•••</button>
+                </div>
+              </article>
+
+              <article class="asset-card">
+                <div class="asset-preview preview-campaign" role="img" aria-label="Composição abstrata de uma campanha">
+                  <span class="campaign-copy">Crie.<br>Compartilhe.</span>
+                  <span class="campaign-dot campaign-dot-one"></span>
+                  <span class="campaign-dot campaign-dot-two"></span>
+                  <span class="campaign-pill"></span>
+                </div>
+                <div class="asset-info">
+                  <div>
+                    <strong>campaign-banner.png</strong>
+                    <span>1920 × 1080 · 2,1 MB</span>
+                  </div>
+                  <button type="button" aria-label="Mais opções para campaign-banner.png">•••</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <footer class="footer">
+            <span>© 2026 PixelDesk</span>
+            <span>Todos os arquivos estão protegidos.</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <aside class="demo-panel" id="demo-panel" aria-label="Preparar estado da página">
+    <strong>Preparar visual</strong>
+    <div>
+      <button type="button" data-demo-action="initial">Estado inicial</button>
+      <button type="button" data-demo-action="uploaded">Imagem adicionada</button>
+      <button type="button" data-demo-action="clear">Limpar</button>
+    </div>
+  </aside>
+</body>
+</html>

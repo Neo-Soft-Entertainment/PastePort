@@ -1,0 +1,13 @@
+{
+  "name": "pasteport-store-assets",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "screenshots:store": "node scripts/generate-store-screenshots.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.57.0",
+    "pngjs": "^7.0.0"
+  }
+}
