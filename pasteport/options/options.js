@@ -17,6 +17,8 @@
 
   const form = document.querySelector("#settings-form");
   const status = document.querySelector("#status");
+  const historyStatus = document.querySelector("#history-status");
+  const clearHistoryButton = document.querySelector("#clear-history");
 
   function storageGet(area) {
     return new Promise((resolve, reject) => {
@@ -42,6 +44,18 @@
         }
 
         resolve();
+      });
+    });
+  }
+
+  function historyRequest(type) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+        type,
+        target: "pasteport-service-worker"
+      }, (response) => {
+        const error = chrome.runtime.lastError;
+        resolve(error ? { success: false } : response);
       });
     });
   }
@@ -137,5 +151,36 @@
     }
   });
 
+  clearHistoryButton.addEventListener("click", async () => {
+    if (clearHistoryButton.dataset.confirm !== "true") {
+      clearHistoryButton.dataset.confirm = "true";
+      clearHistoryButton.textContent = "Confirmar limpeza";
+      historyStatus.textContent = "Clique novamente para remover todas as imagens locais.";
+      return;
+    }
+
+    clearHistoryButton.disabled = true;
+    const response = await historyRequest("history:clear");
+    clearHistoryButton.disabled = false;
+    clearHistoryButton.dataset.confirm = "false";
+    clearHistoryButton.textContent = "Limpar histórico";
+    historyStatus.textContent = response?.success
+      ? "Nenhuma imagem armazenada."
+      : "Não foi possível limpar o histórico.";
+  });
+
+  async function loadHistorySummary() {
+    const response = await historyRequest("history:list");
+    if (!response?.success) {
+      historyStatus.textContent = "Histórico indisponível.";
+      return;
+    }
+
+    historyStatus.textContent = response.items.length === 1
+      ? "1 imagem armazenada somente neste dispositivo."
+      : `${response.items.length} imagens armazenadas somente neste dispositivo.`;
+  }
+
   load();
+  loadHistorySummary();
 })();

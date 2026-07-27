@@ -6,9 +6,20 @@
     anchor,
     settings,
     onFiles,
+    onHistoryLoad,
+    onHistorySelect,
+    onHistoryRemove,
+    onHistoryClear,
     onNativePicker,
     onClose
   }) {
+    let stylesheetUrl;
+    try {
+      stylesheetUrl = chrome.runtime.getURL("content/styles.css");
+    } catch (error) {
+      return null;
+    }
+
     let previousFocus = document.activeElement;
     while (previousFocus?.shadowRoot?.activeElement) {
       previousFocus = previousFocus.shadowRoot.activeElement;
@@ -30,7 +41,7 @@
     const shadowRoot = host.attachShadow({ mode: "open" });
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = chrome.runtime.getURL("content/styles.css");
+    stylesheet.href = stylesheetUrl;
 
     const overlay = document.createElement("div");
     overlay.className = "pp-overlay";
@@ -63,7 +74,19 @@
               </svg>
               Área de transferência
             </span>
-            <span class="pp-clipboard-badge">Aguardando Ctrl+V</span>
+            <span class="pp-clipboard-actions">
+              <span class="pp-clipboard-badge">Carregando…</span>
+              <button class="pp-clear-history" type="button" hidden>Limpar</button>
+            </span>
+          </div>
+
+          <div class="pp-history-panel">
+            <div class="pp-history-loading" role="status">Lendo imagens recentes…</div>
+            <div class="pp-history-list" role="list" aria-label="Imagens recentes da área de transferência" hidden></div>
+            <div class="pp-history-empty" hidden>
+              <strong>Nenhuma imagem recente</strong>
+              <span>As próximas imagens copiadas aparecerão aqui.</span>
+            </div>
           </div>
 
           <div class="pp-paste-zone" contenteditable="true" role="textbox" tabindex="0"
@@ -74,7 +97,7 @@
                   <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path>
                 </svg>
               </div>
-              <strong>Cole a imagem para visualizá-la</strong>
+              <strong>Cole outra imagem agora</strong>
               <span>Pressione <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
               <small class="pp-drop-copy">ou arraste imagens para esta área</small>
             </div>
@@ -109,7 +132,12 @@
     const pasteZone = overlay.querySelector(".pp-paste-zone");
     const emptyState = overlay.querySelector(".pp-empty-state");
     const previewGrid = overlay.querySelector(".pp-preview-grid");
+    const historyPanel = overlay.querySelector(".pp-history-panel");
+    const historyLoading = overlay.querySelector(".pp-history-loading");
+    const historyList = overlay.querySelector(".pp-history-list");
+    const historyEmpty = overlay.querySelector(".pp-history-empty");
     const clipboardBadge = overlay.querySelector(".pp-clipboard-badge");
+    const clearHistoryButton = overlay.querySelector(".pp-clear-history");
     const status = overlay.querySelector(".pp-status");
     const closeButton = overlay.querySelector(".pp-close");
     const nativeButton = overlay.querySelector(".pp-native-button");
@@ -118,16 +146,21 @@
     let closed = false;
     let dragDepth = 0;
     let closeTimer = null;
+    let clearConfirmationTimer = null;
     let previewUrls = [];
+    let processing = false;
 
     if (!settings.dragDropEnabled) {
       overlay.querySelector(".pp-drop-copy").hidden = true;
     }
 
     function setBusy(busy) {
+      processing = busy;
       dialog.setAttribute("aria-busy", String(busy));
       pasteZone.classList.toggle("is-busy", busy);
+      historyPanel.classList.toggle("is-busy", busy);
       nativeButton.disabled = busy;
+      clearHistoryButton.disabled = busy;
     }
 
     function setStatus(message, type = "info") {
@@ -151,11 +184,6 @@
       emptyState.hidden = true;
       previewGrid.hidden = false;
       pasteZone.classList.add("has-preview");
-
-      const label = source === "paste" ? "imagem colada" : "arquivo";
-      clipboardBadge.textContent = files.length === 1
-        ? `1 ${label}`
-        : `${files.length} ${source === "paste" ? "imagens coladas" : "arquivos"}`;
 
       for (const [index, file] of files.slice(0, 6).entries()) {
         const figure = document.createElement("figure");
@@ -195,6 +223,132 @@
       }
 
       requestAnimationFrame(positionBubble);
+    }
+
+    function historyTime(timestamp) {
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(timestamp));
+    }
+
+    function renderHistory(items) {
+      historyList.replaceChildren();
+      historyLoading.hidden = true;
+      historyList.hidden = items.length === 0;
+      historyEmpty.hidden = items.length > 0;
+      clearHistoryButton.hidden = items.length === 0;
+      clearHistoryButton.classList.remove("is-confirming");
+      clearHistoryButton.textContent = "Limpar";
+      clipboardBadge.textContent = items.length === 1
+        ? "1 imagem recente"
+        : `${items.length} imagens recentes`;
+
+      for (const item of items) {
+        const card = document.createElement("article");
+        card.className = "pp-history-card";
+        card.setAttribute("role", "listitem");
+
+        const selectButton = document.createElement("button");
+        selectButton.className = "pp-history-select";
+        selectButton.type = "button";
+        selectButton.dataset.historyId = item.id;
+        selectButton.setAttribute("aria-label", `Usar imagem copiada em ${historyTime(item.createdAt)}`);
+
+        if (item.thumbnail) {
+          const image = document.createElement("img");
+          image.src = item.thumbnail;
+          image.alt = "";
+          selectButton.append(image);
+        } else {
+          const placeholder = document.createElement("span");
+          placeholder.className = "pp-history-placeholder";
+          placeholder.textContent = "IMG";
+          selectButton.append(placeholder);
+        }
+
+        const caption = document.createElement("span");
+        caption.textContent = historyTime(item.createdAt);
+        selectButton.append(caption);
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "pp-remove-history";
+        removeButton.type = "button";
+        removeButton.dataset.removeHistoryId = item.id;
+        removeButton.setAttribute("aria-label", `Remover imagem copiada em ${historyTime(item.createdAt)}`);
+        removeButton.textContent = "×";
+
+        card.append(selectButton, removeButton);
+        historyList.append(card);
+      }
+
+      requestAnimationFrame(positionBubble);
+    }
+
+    async function loadHistory() {
+      const response = await onHistoryLoad();
+      if (closed) {
+        return;
+      }
+
+      if (!response.success) {
+        historyLoading.textContent = response.message;
+        clipboardBadge.textContent = "Indisponível";
+        return;
+      }
+
+      renderHistory(response.items || []);
+      if (response.warning) {
+        setStatus(response.warning, "error");
+      }
+    }
+
+    async function useHistoryItem(id) {
+      if (processing) {
+        return;
+      }
+
+      clearTimeout(closeTimer);
+      closeTimer = null;
+      setBusy(true);
+      setStatus("Inserindo imagem do histórico…");
+
+      try {
+        const result = await onHistorySelect(id);
+        setStatus(result.message, result.success ? "success" : "error");
+
+        if (result.success && result.closeAfterMs !== null) {
+          closeTimer = setTimeout(() => close("history-item-inserted"), result.closeAfterMs);
+        }
+      } catch (error) {
+        setStatus("Não foi possível inserir esta imagem do histórico.", "error");
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function removeHistoryItem(id) {
+      if (processing) {
+        return;
+      }
+
+      setBusy(true);
+      try {
+        const response = await onHistoryRemove(id);
+        if (!response.success) {
+          setStatus(response.message, "error");
+          return;
+        }
+
+        renderHistory(response.items || []);
+        setStatus("Imagem removida do histórico.", "success");
+      } catch (error) {
+        setStatus("Não foi possível remover esta imagem.", "error");
+      } finally {
+        setBusy(false);
+      }
     }
 
     function positionBubble() {
@@ -280,6 +434,7 @@
 
       closed = true;
       clearTimeout(closeTimer);
+      clearTimeout(clearConfirmationTimer);
       clearPreviewUrls();
       abortController.abort();
       host.remove();
@@ -291,6 +446,10 @@
     }
 
     async function processFiles(files, source) {
+      if (processing) {
+        return;
+      }
+
       clearTimeout(closeTimer);
       closeTimer = null;
 
@@ -377,6 +536,55 @@
 
     closeButton.addEventListener("click", () => close("close-button"), { signal });
 
+    historyList.addEventListener("click", (event) => {
+      const removeButton = event.target.closest?.("[data-remove-history-id]");
+      if (removeButton) {
+        removeHistoryItem(removeButton.dataset.removeHistoryId);
+        return;
+      }
+
+      const selectButton = event.target.closest?.("[data-history-id]");
+      if (selectButton) {
+        useHistoryItem(selectButton.dataset.historyId);
+      }
+    }, { signal });
+
+    clearHistoryButton.addEventListener("click", async () => {
+      if (processing) {
+        return;
+      }
+
+      if (!clearHistoryButton.classList.contains("is-confirming")) {
+        clearHistoryButton.classList.add("is-confirming");
+        clearHistoryButton.textContent = "Confirmar";
+        clearTimeout(clearConfirmationTimer);
+        clearConfirmationTimer = setTimeout(() => {
+          clearHistoryButton.classList.remove("is-confirming");
+          clearHistoryButton.textContent = "Limpar";
+        }, 4000);
+        return;
+      }
+
+      clearTimeout(clearConfirmationTimer);
+      setBusy(true);
+      try {
+        const response = await onHistoryClear();
+        if (!response.success) {
+          setStatus(response.message, "error");
+          return;
+        }
+
+        clearHistoryButton.classList.remove("is-confirming");
+        clearHistoryButton.textContent = "Limpar";
+        renderHistory([]);
+        setStatus("Histórico local removido.", "success");
+      } catch (error) {
+        setStatus("Não foi possível limpar o histórico.", "error");
+      } finally {
+        setBusy(false);
+      }
+    }, { signal });
+
     nativeButton.addEventListener("click", () => {
       const originalInput = input;
       close("native-picker", false);
@@ -400,7 +608,9 @@
         return;
       }
 
-      const focusable = [pasteZone, nativeButton, closeButton].filter((element) => !element.disabled);
+      const focusable = Array.from(
+        dialog.querySelectorAll('button:not([disabled]), [tabindex="0"]')
+      ).filter((element) => !element.hidden && !element.closest("[hidden]"));
       const currentIndex = focusable.indexOf(shadowRoot.activeElement);
       const nextIndex = event.shiftKey
         ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
@@ -418,6 +628,7 @@
       positionBubble();
       pasteZone.focus({ preventScroll: true });
     });
+    loadHistory();
 
     return Object.freeze({
       close,

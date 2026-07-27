@@ -141,11 +141,19 @@
             <input id="debug" type="checkbox">
             <span class="toggle" aria-hidden="true"></span>
           </label>
+
+          <div class="history-management">
+            <span>
+              <strong>Histórico da área de transferência</strong>
+              <small id="history-status">Consultando imagens armazenadas…</small>
+            </span>
+            <button id="clear-history" class="secondary-button" type="button">Limpar histórico</button>
+          </div>
         </section>
 
         <section class="privacy">
-          <strong>Privacidade por padrão</strong>
-          <p>O PastePort processa tudo localmente, não monitora o clipboard e não envia imagens, telemetria ou dados de navegação.</p>
+          <strong>Histórico local e privado</strong>
+          <p>O PastePort monitora somente imagens copiadas e mantém as 10 mais recentes no IndexedDB deste dispositivo. Nada é sincronizado ou enviado para servidores.</p>
         </section>
 
         <div class="actions">

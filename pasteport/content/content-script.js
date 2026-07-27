@@ -49,6 +49,14 @@
     }
   }
 
+  function extensionContextAvailable() {
+    try {
+      return Boolean(chrome.runtime?.id && chrome.runtime.getURL(""));
+    } catch (error) {
+      return false;
+    }
+  }
+
   function normalizeDomain(value) {
     return String(value || "")
       .trim()
@@ -79,15 +87,61 @@
 
   function readStorageArea(area) {
     return new Promise((resolve, reject) => {
-      area.get(DEFAULT_SETTINGS, (values) => {
-        const error = chrome.runtime.lastError;
-        if (error) {
-          reject(error);
-          return;
-        }
+      try {
+        area.get(DEFAULT_SETTINGS, (values) => {
+          try {
+            const error = chrome.runtime.lastError;
+            if (error) {
+              reject(error);
+              return;
+            }
 
-        resolve(values);
-      });
+            resolve(values);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function historyRequest(type, values = {}) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({
+          ...values,
+          type,
+          target: "pasteport-service-worker"
+        }, (response) => {
+          try {
+            const error = chrome.runtime.lastError;
+            if (error) {
+              resolve({
+                success: false,
+                message: "Não foi possível acessar o histórico da área de transferência."
+              });
+              return;
+            }
+
+            resolve(response || {
+              success: false,
+              message: "O histórico da área de transferência não respondeu."
+            });
+          } catch (error) {
+            resolve({
+              success: false,
+              message: "A extensão foi recarregada. Atualize esta página para reativar o PastePort."
+            });
+          }
+        });
+      } catch (error) {
+        resolve({
+          success: false,
+          message: "A extensão foi recarregada. Atualize esta página para reativar o PastePort."
+        });
+      }
     });
   }
 
@@ -182,7 +236,7 @@
     return { prepared, errors };
   }
 
-  async function handleFiles(files, source) {
+  async function onFilesCallback(files, source) {
     let candidates = files;
     let preparationErrors = [];
 
@@ -231,26 +285,64 @@
     };
   }
 
+  async function onHistorySelectCallback(id) {
+    const response = await historyRequest("history:get", { id });
+    if (!response.success) {
+      return {
+        success: false,
+        message: response.message,
+        closeAfterMs: null
+      };
+    }
+
+    try {
+      const separator = response.item.dataUrl.indexOf(",");
+      const binary = atob(response.item.dataUrl.slice(separator + 1));
+      const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+      const file = new File([bytes], response.item.name, {
+        type: response.item.type,
+        lastModified: Date.now()
+      });
+      return onFilesCallback([file], "history");
+    } catch (error) {
+      debug("Falha ao reconstruir item do histórico.", error);
+      return {
+        success: false,
+        message: "Não foi possível recuperar esta imagem do histórico.",
+        closeAfterMs: null
+      };
+    }
+  }
+
   function closeModal(reason = "controller") {
     modal?.close(reason);
   }
 
   function openModal(input, anchor = null) {
+    if (!extensionContextAvailable()) {
+      stop();
+      return false;
+    }
+
     if (pastePortState.modalOpen) {
       if (pastePortState.activeInput === input) {
         modal?.focus();
       }
-      return;
+      return true;
     }
 
     pastePortState.activeInput = input;
     pastePortState.modalOpen = true;
 
-    modal = modalFactory.createModal({
+    const createdModal = modalFactory.createModal({
       input,
       anchor,
       settings,
-      onFiles: handleFiles,
+      onFiles: onFilesCallback,
+      onHistoryLoad: () => historyRequest("history:list"),
+      onHistorySelect: (id) => onHistorySelectCallback(id),
+      onHistoryRemove: (id) => historyRequest("history:remove", { id }),
+      onHistoryClear: () => historyRequest("history:clear"),
       onNativePicker: openNativePicker,
       onClose(reason) {
         debug("Modal fechado.", reason);
@@ -259,6 +351,15 @@
         pastePortState.activeInput = null;
       }
     });
+
+    if (!createdModal) {
+      pastePortState.activeInput = null;
+      pastePortState.modalOpen = false;
+      return false;
+    }
+
+    modal = createdModal;
+    return true;
   }
 
   function interactionAnchor(event, input) {
@@ -341,6 +442,11 @@
   }
 
   function interceptClick(event) {
+    if (!extensionContextAvailable()) {
+      stop();
+      return;
+    }
+
     if (pastePortState.allowNativePicker || event.button !== 0) {
       return;
     }
@@ -358,10 +464,13 @@
       return;
     }
 
+    registerInput(detection.input);
+    if (!openModal(detection.input, interactionAnchor(event, detection.input))) {
+      return;
+    }
+
     event.preventDefault();
     pastePortState.pendingDetection = false;
-    registerInput(detection.input);
-    openModal(detection.input, interactionAnchor(event, detection.input));
   }
 
   function start() {

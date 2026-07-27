@@ -2,9 +2,12 @@
   "manifest_version": 3,
   "name": "PastePort",
   "description": "Cole imagens diretamente em campos de upload, sem salvar arquivos no computador.",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "minimum_chrome_version": "109",
   "permissions": [
-    "storage"
+    "storage",
+    "clipboardRead",
+    "offscreen"
   ],
   "background": {
     "service_worker": "background/service-worker.js"

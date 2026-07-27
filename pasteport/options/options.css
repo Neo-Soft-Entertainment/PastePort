@@ -200,6 +200,47 @@ form {
   outline-offset: 3px;
 }
 
+.history-management {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.history-management > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-management strong {
+  font-size: 14px;
+}
+
+.history-management small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.secondary-button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.secondary-button:hover {
+  border-color: var(--error);
+  background: color-mix(in srgb, var(--error) 8%, var(--surface));
+  color: var(--error);
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -337,6 +378,7 @@ button:focus-visible {
 
   .toggle-row,
   .card-heading,
+  .history-management,
   .field-grid {
     padding-right: 17px;
     padding-left: 17px;
@@ -355,5 +397,10 @@ button:focus-visible {
 
   .actions button {
     width: 100%;
+  }
+
+  .history-management {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
