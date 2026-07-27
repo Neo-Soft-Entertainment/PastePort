@@ -7,6 +7,10 @@
   box-sizing: border-box;
 }
 
+.pp-overlay [hidden] {
+  display: none !important;
+}
+
 .pp-overlay {
   --pp-bg: #ffffff;
   --pp-surface: #f7f8fc;
@@ -23,21 +27,19 @@
   position: fixed;
   inset: 0;
   z-index: 2147483647;
-  display: grid;
-  place-items: center;
+  display: block;
   width: 100vw;
   height: 100vh;
-  padding: 20px;
-  overflow: auto;
+  overflow: hidden;
   pointer-events: auto;
-  background: rgb(9 13 24 / 68%);
+  background: rgb(9 13 24 / 48%);
   color: var(--pp-text);
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.5;
   text-align: left;
   -webkit-font-smoothing: antialiased;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
   animation: pp-fade-in 140ms ease-out;
 }
 
@@ -73,14 +75,70 @@
   }
 }
 
+.pp-bubble {
+  position: fixed;
+  width: min(470px, calc(100vw - 24px));
+  visibility: hidden;
+}
+
+.pp-bubble.is-positioned {
+  visibility: visible;
+}
+
+.pp-bubble::after {
+  position: absolute;
+  z-index: 0;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-bg);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.pp-bubble[data-placement="right"]::after {
+  top: calc(var(--pp-tail-y) - 9px);
+  left: -8px;
+  border-top: 0;
+  border-right: 0;
+}
+
+.pp-bubble[data-placement="left"]::after {
+  top: calc(var(--pp-tail-y) - 9px);
+  right: -8px;
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.pp-bubble[data-placement="below"]::after {
+  top: -8px;
+  left: calc(var(--pp-tail-x) - 9px);
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.pp-bubble[data-placement="above"]::after {
+  bottom: -8px;
+  left: calc(var(--pp-tail-x) - 9px);
+  border-top: 0;
+  border-left: 0;
+}
+
 .pp-dialog {
-  width: min(100%, 470px);
-  margin: auto;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-height: calc(100vh - 24px);
+  margin: 0;
   padding: 22px;
+  overflow: auto;
   border: 1px solid color-mix(in srgb, var(--pp-border) 75%, transparent);
   border-radius: 22px;
   background: var(--pp-bg);
   box-shadow: 0 24px 70px rgb(0 0 0 / 32%);
+}
+
+.pp-bubble.is-positioned .pp-dialog {
   animation: pp-rise-in 180ms cubic-bezier(.2, .8, .2, 1);
 }
 
@@ -169,13 +227,49 @@
   font-size: 14px;
 }
 
-.pp-paste-zone {
+.pp-clipboard-heading {
   display: flex;
-  min-height: 190px;
   align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.pp-clipboard-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--pp-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pp-clipboard-title svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: var(--pp-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.pp-clipboard-badge {
+  max-width: 190px;
+  overflow: hidden;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-paste-zone {
+  display: block;
+  min-height: 190px;
   padding: 24px;
   overflow: hidden;
   border: 1.5px dashed var(--pp-border);
@@ -186,6 +280,15 @@
   caret-color: transparent;
   cursor: text;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.pp-empty-state {
+  display: flex;
+  min-height: 140px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .pp-paste-zone:hover,
@@ -204,6 +307,12 @@
 .pp-paste-zone.is-busy {
   cursor: wait;
   opacity: .72;
+}
+
+.pp-paste-zone.has-preview {
+  min-height: 190px;
+  padding: 10px;
+  border-style: solid;
 }
 
 .pp-zone-icon {
@@ -227,18 +336,18 @@
   stroke-width: 1.8;
 }
 
-.pp-paste-zone strong {
+.pp-empty-state strong {
   font-size: 16px;
   font-weight: 700;
 }
 
-.pp-paste-zone span,
-.pp-paste-zone small {
+.pp-empty-state span,
+.pp-empty-state small {
   color: var(--pp-muted);
   font-size: 13px;
 }
 
-.pp-paste-zone kbd {
+.pp-empty-state kbd {
   display: inline-block;
   min-width: 25px;
   padding: 1px 6px;
@@ -248,6 +357,59 @@
   background: var(--pp-bg);
   color: var(--pp-text);
   font: 600 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.pp-preview-grid {
+  display: grid;
+  min-height: 168px;
+  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
+  align-content: center;
+  gap: 8px;
+}
+
+.pp-preview-grid figure {
+  min-width: 0;
+  margin: 0;
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--pp-border);
+  border-radius: 11px;
+  background: var(--pp-bg);
+}
+
+.pp-preview-grid img,
+.pp-file-placeholder {
+  display: grid;
+  width: 100%;
+  height: 116px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+  font-size: 18px;
+  font-weight: 800;
+  object-fit: contain;
+}
+
+.pp-preview-grid figcaption {
+  overflow: hidden;
+  padding: 5px 3px 1px;
+  color: var(--pp-muted);
+  font-size: 10px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-preview-more {
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  border: 1px dashed var(--pp-border);
+  border-radius: 11px;
+  color: var(--pp-accent);
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .pp-status {
@@ -337,10 +499,6 @@
 }
 
 @media (max-width: 520px), (max-height: 650px) {
-  .pp-overlay {
-    padding: 10px;
-  }
-
   .pp-dialog {
     padding: 17px;
     border-radius: 18px;
@@ -359,6 +517,23 @@
     padding: 18px;
   }
 
+  .pp-paste-zone.has-preview {
+    padding: 8px;
+  }
+
+  .pp-empty-state {
+    min-height: 112px;
+  }
+
+  .pp-preview-grid {
+    min-height: 134px;
+  }
+
+  .pp-preview-grid img,
+  .pp-file-placeholder {
+    height: 86px;
+  }
+
   .pp-zone-icon {
     width: 40px;
     height: 40px;
@@ -367,7 +542,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pp-overlay,
-  .pp-dialog {
+  .pp-bubble.is-positioned .pp-dialog {
     animation: none;
   }
 

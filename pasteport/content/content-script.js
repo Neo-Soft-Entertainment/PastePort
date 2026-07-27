@@ -32,6 +32,7 @@
     modalOpen: false,
     allowNativePicker: false,
     lastInteractionTarget: null,
+    lastInteractionPoint: null,
     pendingDetection: false
   };
 
@@ -226,7 +227,7 @@
     return {
       success: true,
       message,
-      closeAfterMs: settings.closeAfterInsert ? 450 : null
+      closeAfterMs: settings.closeAfterInsert ? 900 : null
     };
   }
 
@@ -234,7 +235,7 @@
     modal?.close(reason);
   }
 
-  function openModal(input) {
+  function openModal(input, anchor = null) {
     if (pastePortState.modalOpen) {
       if (pastePortState.activeInput === input) {
         modal?.focus();
@@ -247,6 +248,7 @@
 
     modal = modalFactory.createModal({
       input,
+      anchor,
       settings,
       onFiles: handleFiles,
       onNativePicker: openNativePicker,
@@ -257,6 +259,46 @@
         pastePortState.activeInput = null;
       }
     });
+  }
+
+  function interactionAnchor(event, input) {
+    if (event.isTrusted && event.detail !== 0
+      && (event.clientX !== 0 || event.clientY !== 0)) {
+      return { x: event.clientX, y: event.clientY };
+    }
+
+    if (!event.isTrusted
+      && pastePortState.lastInteractionPoint
+      && performance.now() - pastePortState.lastInteractionPoint.time < 1200) {
+      return pastePortState.lastInteractionPoint;
+    }
+
+    const path = typeof event.composedPath === "function"
+      ? event.composedPath()
+      : [event.target];
+    const anchorElement = path.find((element) => {
+      if (element?.nodeType !== Node.ELEMENT_NODE) {
+        return false;
+      }
+
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    }) || input;
+    const rect = anchorElement.getBoundingClientRect();
+
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2
+    };
+  }
+
+  function trackPointer(event) {
+    pastePortState.lastInteractionTarget = event.target;
+    pastePortState.lastInteractionPoint = {
+      x: event.clientX,
+      y: event.clientY,
+      time: performance.now()
+    };
   }
 
   function openNativePicker(input) {
@@ -317,10 +359,9 @@
     }
 
     event.preventDefault();
-    pastePortState.lastInteractionTarget = event.target;
     pastePortState.pendingDetection = false;
     registerInput(detection.input);
-    openModal(detection.input);
+    openModal(detection.input, interactionAnchor(event, detection.input));
   }
 
   function start() {
@@ -331,6 +372,11 @@
     pageAbortController = new AbortController();
     document.addEventListener("click", interceptClick, {
       capture: true,
+      signal: pageAbortController.signal
+    });
+    document.addEventListener("pointerdown", trackPointer, {
+      capture: true,
+      passive: true,
       signal: pageAbortController.signal
     });
 

@@ -3,6 +3,7 @@
 
   function createModal({
     input,
+    anchor,
     settings,
     onFiles,
     onNativePicker,
@@ -35,60 +36,80 @@
     overlay.className = "pp-overlay";
     overlay.dataset.theme = settings.theme;
     overlay.innerHTML = `
-      <section class="pp-dialog" role="dialog" aria-modal="true" aria-labelledby="pp-title" aria-describedby="pp-description">
-        <header class="pp-header">
-          <div class="pp-brand" aria-label="PastePort">
-            <span class="pp-logo" aria-hidden="true">P</span>
-            <span>PastePort</span>
+      <div class="pp-bubble">
+        <section class="pp-dialog" role="dialog" aria-modal="true" aria-labelledby="pp-title" aria-describedby="pp-description">
+          <header class="pp-header">
+            <div class="pp-brand" aria-label="PastePort">
+              <span class="pp-logo" aria-hidden="true">P</span>
+              <span>PastePort</span>
+            </div>
+            <button class="pp-close" type="button" aria-label="Fechar modal">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18"></path>
+              </svg>
+            </button>
+          </header>
+
+          <div class="pp-heading">
+            <h1 id="pp-title">Adicionar imagem</h1>
+            <p id="pp-description">Use a imagem da área de transferência ou escolha um arquivo.</p>
           </div>
-          <button class="pp-close" type="button" aria-label="Fechar modal">
+
+          <div class="pp-clipboard-heading">
+            <span class="pp-clipboard-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 5.5h6M9.5 3h5a1 1 0 0 1 1 1v3h-7V4a1 1 0 0 1 1-1Z"></path>
+                <path d="M8.5 5H6.8A1.8 1.8 0 0 0 5 6.8v12.4A1.8 1.8 0 0 0 6.8 21h10.4a1.8 1.8 0 0 0 1.8-1.8V6.8A1.8 1.8 0 0 0 17.2 5h-1.7"></path>
+              </svg>
+              Área de transferência
+            </span>
+            <span class="pp-clipboard-badge">Aguardando Ctrl+V</span>
+          </div>
+
+          <div class="pp-paste-zone" contenteditable="true" role="textbox" tabindex="0"
+            spellcheck="false" aria-label="Área de transferência para colar ou arrastar imagens">
+            <div class="pp-empty-state">
+              <div class="pp-zone-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path>
+                </svg>
+              </div>
+              <strong>Cole a imagem para visualizá-la</strong>
+              <span>Pressione <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
+              <small class="pp-drop-copy">ou arraste imagens para esta área</small>
+            </div>
+            <div class="pp-preview-grid" aria-label="Pré-visualização da área de transferência" hidden></div>
+          </div>
+
+          <div class="pp-status" role="status" aria-live="polite" hidden></div>
+
+          <div class="pp-separator" aria-hidden="true">
+            <span></span><em>ou</em><span></span>
+          </div>
+
+          <button class="pp-native-button" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18"></path>
+              <path d="M3.5 7.5h6l2-2h9v13h-17z"></path>
             </svg>
+            Selecionar do computador
           </button>
-        </header>
 
-        <div class="pp-heading">
-          <h1 id="pp-title">Adicionar imagem</h1>
-          <p id="pp-description">Cole uma imagem da área de transferência ou escolha um arquivo.</p>
-        </div>
-
-        <div class="pp-paste-zone" contenteditable="true" role="textbox" tabindex="0"
-          spellcheck="false" aria-label="Área para colar ou arrastar imagens">
-          <div class="pp-zone-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path>
-            </svg>
-          </div>
-          <strong>Cole uma imagem aqui</strong>
-          <span>Pressione <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
-          <small class="pp-drop-copy">ou arraste imagens para esta área</small>
-        </div>
-
-        <div class="pp-status" role="status" aria-live="polite" hidden></div>
-
-        <div class="pp-separator" aria-hidden="true">
-          <span></span><em>ou</em><span></span>
-        </div>
-
-        <button class="pp-native-button" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3.5 7.5h6l2-2h9v13h-17z"></path>
-          </svg>
-          Selecionar do computador
-        </button>
-
-        <p class="pp-privacy">
-          A imagem é processada apenas neste dispositivo.
-        </p>
-      </section>
+          <p class="pp-privacy">
+            A imagem é processada apenas neste dispositivo.
+          </p>
+        </section>
+      </div>
     `;
 
     shadowRoot.append(stylesheet, overlay);
     (document.documentElement || document.body).append(host);
 
+    const bubble = overlay.querySelector(".pp-bubble");
     const dialog = overlay.querySelector(".pp-dialog");
     const pasteZone = overlay.querySelector(".pp-paste-zone");
+    const emptyState = overlay.querySelector(".pp-empty-state");
+    const previewGrid = overlay.querySelector(".pp-preview-grid");
+    const clipboardBadge = overlay.querySelector(".pp-clipboard-badge");
     const status = overlay.querySelector(".pp-status");
     const closeButton = overlay.querySelector(".pp-close");
     const nativeButton = overlay.querySelector(".pp-native-button");
@@ -97,6 +118,7 @@
     let closed = false;
     let dragDepth = 0;
     let closeTimer = null;
+    let previewUrls = [];
 
     if (!settings.dragDropEnabled) {
       overlay.querySelector(".pp-drop-copy").hidden = true;
@@ -112,6 +134,143 @@
       status.hidden = !message;
       status.className = `pp-status is-${type}`;
       status.textContent = message || "";
+      requestAnimationFrame(positionBubble);
+    }
+
+    function clearPreviewUrls() {
+      for (const url of previewUrls) {
+        URL.revokeObjectURL(url);
+      }
+
+      previewUrls = [];
+    }
+
+    function showPreview(files, source) {
+      clearPreviewUrls();
+      previewGrid.replaceChildren();
+      emptyState.hidden = true;
+      previewGrid.hidden = false;
+      pasteZone.classList.add("has-preview");
+
+      const label = source === "paste" ? "imagem colada" : "arquivo";
+      clipboardBadge.textContent = files.length === 1
+        ? `1 ${label}`
+        : `${files.length} ${source === "paste" ? "imagens coladas" : "arquivos"}`;
+
+      for (const [index, file] of files.slice(0, 6).entries()) {
+        const figure = document.createElement("figure");
+        const image = document.createElement("img");
+        const caption = document.createElement("figcaption");
+        const canPreview = String(file.type || "").startsWith("image/")
+          || /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(file.name || "");
+
+        if (canPreview) {
+          const url = URL.createObjectURL(file);
+          previewUrls.push(url);
+          image.src = url;
+          image.alt = source === "paste"
+            ? `Prévia da imagem colada ${index + 1}`
+            : `Prévia de ${file.name || `imagem ${index + 1}`}`;
+          figure.append(image);
+        } else {
+          const placeholder = document.createElement("span");
+          placeholder.className = "pp-file-placeholder";
+          placeholder.textContent = "ARQ";
+          figure.append(placeholder);
+        }
+
+        caption.textContent = source === "paste"
+          ? `Imagem ${index + 1}`
+          : file.name || `Arquivo ${index + 1}`;
+        figure.append(caption);
+        previewGrid.append(figure);
+      }
+
+      if (files.length > 6) {
+        const remaining = document.createElement("span");
+        remaining.className = "pp-preview-more";
+        remaining.textContent = `+${files.length - 6}`;
+        remaining.setAttribute("aria-label", `Mais ${files.length - 6} arquivos`);
+        previewGrid.append(remaining);
+      }
+
+      requestAnimationFrame(positionBubble);
+    }
+
+    function positionBubble() {
+      if (closed) {
+        return;
+      }
+
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+      const margin = 12;
+      const gap = 14;
+      const inputRect = input.getBoundingClientRect();
+      const point = {
+        x: Number.isFinite(anchor?.x)
+          ? anchor.x
+          : inputRect.left + inputRect.width / 2,
+        y: Number.isFinite(anchor?.y)
+          ? anchor.y
+          : inputRect.top + inputRect.height / 2
+      };
+
+      point.x = Math.min(viewportWidth - margin, Math.max(margin, point.x));
+      point.y = Math.min(viewportHeight - margin, Math.max(margin, point.y));
+
+      dialog.style.maxHeight = `${viewportHeight - margin * 2}px`;
+
+      let rect = bubble.getBoundingClientRect();
+      const width = rect.width;
+      const spaceRight = viewportWidth - point.x - margin - gap;
+      const spaceLeft = point.x - margin - gap;
+      const spaceBelow = viewportHeight - point.y - margin - gap;
+      const spaceAbove = point.y - margin - gap;
+      let placement;
+      let left;
+      let top;
+
+      if (spaceRight >= width) {
+        placement = "right";
+      } else if (spaceLeft >= width) {
+        placement = "left";
+      } else if (spaceBelow >= rect.height || spaceBelow >= spaceAbove) {
+        placement = "below";
+      } else {
+        placement = "above";
+      }
+
+      if (placement === "below" || placement === "above") {
+        dialog.style.maxHeight = `${Math.max(0, placement === "below" ? spaceBelow : spaceAbove)}px`;
+        rect = bubble.getBoundingClientRect();
+      }
+
+      const height = rect.height;
+
+      if (placement === "right") {
+        left = point.x + gap;
+        top = point.y - Math.min(72, height * 0.2);
+      } else if (placement === "left") {
+        left = point.x - width - gap;
+        top = point.y - Math.min(72, height * 0.2);
+      } else if (placement === "below") {
+        left = point.x - Math.min(72, width * 0.2);
+        top = point.y + gap;
+      } else {
+        left = point.x - Math.min(72, width * 0.2);
+        top = point.y - height - gap;
+      }
+
+      left = Math.min(viewportWidth - width - margin, Math.max(margin, left));
+      top = Math.min(viewportHeight - height - margin, Math.max(margin, top));
+
+      bubble.style.left = `${left}px`;
+      bubble.style.top = `${top}px`;
+      bubble.style.setProperty("--pp-tail-x", `${Math.min(width - 28, Math.max(28, point.x - left))}px`);
+      bubble.style.setProperty("--pp-tail-y", `${Math.min(height - 28, Math.max(28, point.y - top))}px`);
+      bubble.dataset.placement = placement;
+      bubble.classList.add("is-positioned");
     }
 
     function close(reason = "dismissed", restoreFocus = true) {
@@ -121,6 +280,7 @@
 
       closed = true;
       clearTimeout(closeTimer);
+      clearPreviewUrls();
       abortController.abort();
       host.remove();
       onClose(reason);
@@ -131,6 +291,9 @@
     }
 
     async function processFiles(files, source) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+
       if (!files.length) {
         setStatus(
           source === "paste"
@@ -141,6 +304,7 @@
         return;
       }
 
+      showPreview(files, source);
       setBusy(true);
       setStatus(source === "paste" ? "Processando imagem…" : "Validando arquivos…");
 
@@ -155,9 +319,6 @@
         setStatus("Não foi possível inserir a imagem neste campo.", "error");
       } finally {
         setBusy(false);
-        pasteZone.replaceChildren(
-          ...Array.from(pasteZone.childNodes).filter((node) => node.nodeType === Node.ELEMENT_NODE)
-        );
       }
     }
 
@@ -249,7 +410,14 @@
       focusable[nextIndex].focus();
     }, { signal });
 
-    requestAnimationFrame(() => pasteZone.focus({ preventScroll: true }));
+    window.addEventListener("resize", positionBubble, { signal });
+    window.visualViewport?.addEventListener("resize", positionBubble, { signal });
+    stylesheet.addEventListener("load", positionBubble, { signal });
+
+    requestAnimationFrame(() => {
+      positionBubble();
+      pasteZone.focus({ preventScroll: true });
+    });
 
     return Object.freeze({
       close,

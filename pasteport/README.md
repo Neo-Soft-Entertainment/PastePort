@@ -7,8 +7,9 @@ Não há backend, telemetria, dependências ou código remoto.
 ## Recursos
 
 - Interceptação conservadora de inputs de imagem, labels, dropzones e botões associados.
-- Modal responsivo em Shadow DOM aberto, isolado do CSS da página.
+- Modal responsivo em Shadow DOM aberto, exibido como um balão junto ao ponto do clique e isolado do CSS da página.
 - Colagem com `Ctrl+V` sem permissão `clipboardRead`.
+- Pré-visualização local da imagem colada dentro da área de transferência do modal.
 - Drag-and-drop de uma ou várias imagens.
 - Validação de `accept`, `multiple` e limite configurável.
 - Seletor nativo disponível no próprio modal, sem loop de interceptação.
@@ -32,8 +33,9 @@ Para aplicar mudanças durante o desenvolvimento, use o botão de recarregar no 
 
 1. Copie uma imagem.
 2. Clique em um campo, label, botão ou área de upload de imagem.
-3. Quando o modal PastePort abrir, pressione `Ctrl+V`.
-4. O site recebe um `File` como se ele tivesse sido selecionado normalmente.
+3. O balão PastePort aparece junto ao ponto clicado.
+4. Pressione `Ctrl+V` para visualizar a imagem na área de transferência do modal.
+5. O site recebe um `File` como se ele tivesse sido selecionado normalmente.
 
 O botão **Selecionar do computador** fecha o modal e abre o seletor nativo. `Escape`, o botão de fechar e um clique no overlay também fecham o modal.
 
@@ -133,6 +135,7 @@ Também devem ser verificados `Escape`, clique no overlay, foco inicial, navega�
 ## Limitações conhecidas
 
 - Shadow DOM fechado não expõe seus inputs; o PastePort preserva o comportamento do site.
+- O Chrome não expõe o histórico da área de transferência para extensões. A pré-visualização mostra somente as imagens entregues pelo evento `paste`, após `Ctrl+V`.
 - Frames de origem restrita, páginas internas do navegador, Chrome Web Store e outros locais onde extensões não podem executar permanecem inalterados.
 - Um site que chama `input.showPicker()` diretamente, sem gerar um clique observável e sem associação DOM identificável, pode abrir o seletor antes da extensão. O PastePort não substitui APIs globais da página.
 - Se vários inputs forem igualmente prováveis para um botão customizado, a extensão não escolhe arbitrariamente e preserva o clique.
