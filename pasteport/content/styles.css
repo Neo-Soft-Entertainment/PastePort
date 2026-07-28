@@ -143,7 +143,11 @@
   border: 1px solid var(--pp-border);
   border-radius: 12px;
   background: var(--pp-bg);
-  box-shadow: 0 8px 24px 3px rgb(60 64 67 / 24%);
+  box-shadow: 0 4px 12px rgb(32 33 36 / 20%);
+}
+
+.pp-dialog:focus {
+  outline: none;
 }
 
 .pp-bubble.is-positioned .pp-dialog {
@@ -198,8 +202,7 @@
 }
 
 .pp-close:focus-visible,
-.pp-native-button:focus-visible,
-.pp-paste-zone:focus-visible {
+.pp-native-button:focus-visible {
   outline: 2px solid var(--pp-accent);
   outline-offset: 2px;
 }
@@ -312,6 +315,12 @@
 .pp-history-panel.is-busy {
   opacity: .62;
   pointer-events: none;
+}
+
+.pp-history-panel.is-dragging {
+  border-radius: 8px;
+  background: var(--pp-accent-soft);
+  box-shadow: inset 0 0 0 2px var(--pp-accent);
 }
 
 .pp-history-loading,
@@ -444,150 +453,6 @@
   }
 }
 
-.pp-paste-zone {
-  display: block;
-  min-height: 126px;
-  padding: 14px;
-  overflow: hidden;
-  border: 1.5px dashed var(--pp-border);
-  border-radius: 10px;
-  background: var(--pp-surface);
-  color: var(--pp-text);
-  text-align: center;
-  caret-color: transparent;
-  cursor: text;
-  transition: border-color 100ms ease, background 100ms ease;
-}
-
-.pp-empty-state {
-  display: flex;
-  min-height: 96px;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.pp-paste-zone:hover,
-.pp-paste-zone:focus {
-  border-color: var(--pp-accent);
-  background: var(--pp-accent-soft);
-}
-
-.pp-paste-zone.is-dragging {
-  border-color: var(--pp-accent);
-  border-style: solid;
-  background: var(--pp-accent-soft);
-}
-
-.pp-paste-zone.is-busy {
-  cursor: wait;
-  opacity: .72;
-}
-
-.pp-paste-zone.has-preview {
-  min-height: 190px;
-  padding: 10px;
-  border-style: solid;
-}
-
-.pp-zone-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin-bottom: 3px;
-  border-radius: 50%;
-  background: var(--pp-bg);
-  color: var(--pp-muted);
-}
-
-.pp-zone-icon svg {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
-.pp-empty-state strong {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.pp-empty-state span,
-.pp-empty-state small {
-  color: var(--pp-muted);
-  font-size: 13px;
-}
-
-.pp-empty-state kbd {
-  display: inline-block;
-  min-width: 25px;
-  padding: 1px 6px;
-  border: 1px solid var(--pp-border);
-  border-bottom-width: 2px;
-  border-radius: 5px;
-  background: var(--pp-bg);
-  color: var(--pp-text);
-  font: 600 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
-}
-
-.pp-preview-grid {
-  display: grid;
-  min-height: 150px;
-  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
-  align-content: center;
-  gap: 8px;
-}
-
-.pp-preview-grid figure {
-  min-width: 0;
-  margin: 0;
-  padding: 5px;
-  overflow: hidden;
-  border: 1px solid var(--pp-border);
-  border-radius: 8px;
-  background: var(--pp-bg);
-}
-
-.pp-preview-grid img,
-.pp-file-placeholder {
-  display: grid;
-  width: 100%;
-  height: 116px;
-  place-items: center;
-  border-radius: 5px;
-  background: var(--pp-surface);
-  color: var(--pp-muted);
-  font-size: 18px;
-  font-weight: 800;
-  object-fit: contain;
-}
-
-.pp-preview-grid figcaption {
-  overflow: hidden;
-  padding: 5px 3px 1px;
-  color: var(--pp-muted);
-  font-size: 10px;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pp-preview-more {
-  display: grid;
-  min-height: 150px;
-  place-items: center;
-  border: 1px dashed var(--pp-border);
-  border-radius: 8px;
-  color: var(--pp-muted);
-  font-size: 18px;
-  font-weight: 800;
-}
-
 .pp-status {
   margin-top: 12px;
   padding: 10px 12px;
@@ -684,32 +549,6 @@
     font-size: 21px;
   }
 
-  .pp-paste-zone {
-    min-height: 112px;
-    padding: 10px;
-  }
-
-  .pp-paste-zone.has-preview {
-    padding: 8px;
-  }
-
-  .pp-empty-state {
-    min-height: 90px;
-  }
-
-  .pp-preview-grid {
-    min-height: 134px;
-  }
-
-  .pp-preview-grid img,
-  .pp-file-placeholder {
-    height: 86px;
-  }
-
-  .pp-zone-icon {
-    width: 40px;
-    height: 40px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -718,7 +557,7 @@
     animation: none;
   }
 
-  .pp-paste-zone,
+  .pp-history-panel,
   .pp-native-button {
     transition: none;
   }

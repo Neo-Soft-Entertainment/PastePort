@@ -57,7 +57,8 @@
     overlay.lang = i18n.getLocale();
     overlay.innerHTML = `
       <div class="pp-bubble">
-        <section class="pp-dialog" role="dialog" aria-modal="true" aria-labelledby="pp-title" aria-describedby="pp-description">
+        <section class="pp-dialog" role="dialog" aria-modal="true" aria-labelledby="pp-title"
+          aria-describedby="pp-description" tabindex="-1">
           <header class="pp-header">
             <div class="pp-brand" aria-label="PastePort">
               <span class="pp-logo" aria-hidden="true">P</span>
@@ -98,21 +99,6 @@
             </div>
           </div>
 
-          <div class="pp-paste-zone" contenteditable="true" role="textbox" tabindex="0"
-            spellcheck="false" aria-label="${escapeHtml(i18n.t("modal.pasteZoneAriaLabel"))}">
-            <div class="pp-empty-state">
-              <div class="pp-zone-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path>
-                </svg>
-              </div>
-              <strong>${escapeHtml(i18n.t("modal.pasteNow"))}</strong>
-              <span>${escapeHtml(i18n.t("modal.press"))} <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
-              <small class="pp-drop-copy">${escapeHtml(i18n.t("modal.orDrop"))}</small>
-            </div>
-            <div class="pp-preview-grid" aria-label="${escapeHtml(i18n.t("modal.previewGridAriaLabel"))}" hidden></div>
-          </div>
-
           <div class="pp-status" role="status" aria-live="polite" hidden></div>
 
           <div class="pp-separator" aria-hidden="true">
@@ -138,9 +124,6 @@
 
     const bubble = overlay.querySelector(".pp-bubble");
     const dialog = overlay.querySelector(".pp-dialog");
-    const pasteZone = overlay.querySelector(".pp-paste-zone");
-    const emptyState = overlay.querySelector(".pp-empty-state");
-    const previewGrid = overlay.querySelector(".pp-preview-grid");
     const historyPanel = overlay.querySelector(".pp-history-panel");
     const historyLoading = overlay.querySelector(".pp-history-loading");
     const historyList = overlay.querySelector(".pp-history-list");
@@ -156,12 +139,7 @@
     let dragDepth = 0;
     let closeTimer = null;
     let clearConfirmationTimer = null;
-    let previewUrls = [];
     let processing = false;
-
-    if (!settings.dragDropEnabled) {
-      overlay.querySelector(".pp-drop-copy").hidden = true;
-    }
 
     function escapeHtml(text) {
       return String(text)
@@ -175,7 +153,6 @@
     function setBusy(busy) {
       processing = busy;
       dialog.setAttribute("aria-busy", String(busy));
-      pasteZone.classList.toggle("is-busy", busy);
       historyPanel.classList.toggle("is-busy", busy);
       nativeButton.disabled = busy;
       clearHistoryButton.disabled = busy;
@@ -185,61 +162,6 @@
       status.hidden = !message;
       status.className = `pp-status is-${type}`;
       status.textContent = message || "";
-      requestAnimationFrame(positionBubble);
-    }
-
-    function clearPreviewUrls() {
-      for (const url of previewUrls) {
-        URL.revokeObjectURL(url);
-      }
-
-      previewUrls = [];
-    }
-
-    function showPreview(files, source) {
-      clearPreviewUrls();
-      previewGrid.replaceChildren();
-      emptyState.hidden = true;
-      previewGrid.hidden = false;
-      pasteZone.classList.add("has-preview");
-
-      for (const [index, file] of files.slice(0, 6).entries()) {
-        const figure = document.createElement("figure");
-        const image = document.createElement("img");
-        const caption = document.createElement("figcaption");
-        const canPreview = String(file.type || "").startsWith("image/")
-          || /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(file.name || "");
-
-        if (canPreview) {
-          const url = URL.createObjectURL(file);
-          previewUrls.push(url);
-          image.src = url;
-          image.alt = source === "paste"
-            ? i18n.t("modal.pastedPreview", { index: index + 1 })
-            : i18n.t("modal.namedPreview", { name: file.name || i18n.t("modal.imageN", { index: index + 1 }) });
-          figure.append(image);
-        } else {
-          const placeholder = document.createElement("span");
-          placeholder.className = "pp-file-placeholder";
-          placeholder.textContent = i18n.t("modal.filePlaceholder");
-          figure.append(placeholder);
-        }
-
-        caption.textContent = source === "paste"
-          ? i18n.t("modal.imageN", { index: index + 1 })
-          : file.name || i18n.t("modal.fileN", { index: index + 1 });
-        figure.append(caption);
-        previewGrid.append(figure);
-      }
-
-      if (files.length > 6) {
-        const remaining = document.createElement("span");
-        remaining.className = "pp-preview-more";
-        remaining.textContent = `+${files.length - 6}`;
-        remaining.setAttribute("aria-label", i18n.t("modal.moreFiles", { count: files.length - 6 }));
-        previewGrid.append(remaining);
-      }
-
       requestAnimationFrame(positionBubble);
     }
 
@@ -448,7 +370,6 @@
       closed = true;
       clearTimeout(closeTimer);
       clearTimeout(clearConfirmationTimer);
-      clearPreviewUrls();
       abortController.abort();
       host.remove();
       onClose(reason);
@@ -458,7 +379,7 @@
       }
     }
 
-    async function processFiles(files, source) {
+    async function processFiles(files) {
       if (processing) {
         return;
       }
@@ -467,21 +388,15 @@
       closeTimer = null;
 
       if (!files.length) {
-        setStatus(
-          source === "paste"
-            ? i18n.t("modal.noClipboardImage")
-            : i18n.t("modal.noDroppedImage"),
-          "error"
-        );
+        setStatus(i18n.t("modal.noDroppedImage"), "error");
         return;
       }
 
-      showPreview(files, source);
       setBusy(true);
-      setStatus(source === "paste" ? i18n.t("modal.processingImage") : i18n.t("modal.validatingFiles"));
+      setStatus(i18n.t("modal.validatingFiles"));
 
       try {
-        const result = await onFiles(files, source);
+        const result = await onFiles(files);
         setStatus(result.message, result.success ? "success" : "error");
 
         if (result.success && result.closeAfterMs !== null) {
@@ -494,56 +409,33 @@
       }
     }
 
-    shadowRoot.addEventListener("paste", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const files = [];
-      for (const item of event.clipboardData?.items || []) {
-        if (item.kind !== "file" || !item.type.toLowerCase().startsWith("image/")) {
-          continue;
-        }
-
-        const file = item.getAsFile();
-        if (file) {
-          files.push(file);
-        }
-      }
-
-      processFiles(files, "paste");
-    }, { capture: true, signal });
-
-    pasteZone.addEventListener("beforeinput", (event) => {
-      event.preventDefault();
-    }, { signal });
-
     if (settings.dragDropEnabled) {
-      pasteZone.addEventListener("dragenter", (event) => {
+      historyPanel.addEventListener("dragenter", (event) => {
         event.preventDefault();
         dragDepth += 1;
-        pasteZone.classList.add("is-dragging");
+        historyPanel.classList.add("is-dragging");
       }, { signal });
 
-      pasteZone.addEventListener("dragover", (event) => {
+      historyPanel.addEventListener("dragover", (event) => {
         event.preventDefault();
         if (event.dataTransfer) {
           event.dataTransfer.dropEffect = "copy";
         }
       }, { signal });
 
-      pasteZone.addEventListener("dragleave", (event) => {
+      historyPanel.addEventListener("dragleave", (event) => {
         event.preventDefault();
         dragDepth = Math.max(0, dragDepth - 1);
         if (dragDepth === 0) {
-          pasteZone.classList.remove("is-dragging");
+          historyPanel.classList.remove("is-dragging");
         }
       }, { signal });
 
-      pasteZone.addEventListener("drop", (event) => {
+      historyPanel.addEventListener("drop", (event) => {
         event.preventDefault();
         dragDepth = 0;
-        pasteZone.classList.remove("is-dragging");
-        processFiles(Array.from(event.dataTransfer?.files || []), "drop");
+        historyPanel.classList.remove("is-dragging");
+        processFiles(Array.from(event.dataTransfer?.files || []));
       }, { signal });
     }
 
@@ -639,14 +531,14 @@
 
     requestAnimationFrame(() => {
       positionBubble();
-      pasteZone.focus({ preventScroll: true });
+      dialog.focus({ preventScroll: true });
     });
     loadHistory();
 
     return Object.freeze({
       close,
       setStatus,
-      focus: () => pasteZone.focus({ preventScroll: true })
+      focus: () => dialog.focus({ preventScroll: true })
     });
   }
 

@@ -221,46 +221,18 @@
     knownInputs = new WeakSet();
   }
 
-  async function preparePastedFiles(files) {
-    const prepared = [];
-    const errors = [];
-
-    for (const [index, file] of files.entries()) {
-      const result = await injector.createPastedFile(file, settings.defaultFileName, index);
-      if (result.success) {
-        prepared.push(result.file);
-        continue;
-      }
-
-      errors.push(result);
-    }
-
-    return { prepared, errors };
-  }
-
-  async function onFilesCallback(files, source) {
-    let candidates = files;
-    let preparationErrors = [];
-
-    if (source === "paste") {
-      const result = await preparePastedFiles(files);
-      candidates = result.prepared;
-      preparationErrors = result.errors;
-    }
-
-    if (!candidates.length) {
-      const error = preparationErrors[0];
-      debug("Falha ao preparar imagem colada.", error);
+  async function onFilesCallback(files) {
+    if (!files.length) {
       return {
         success: false,
-        message: error?.message || i18n.t("content.noValidImage"),
+        message: i18n.t("content.noValidImage"),
         closeAfterMs: null
       };
     }
 
     const result = injector.assignFilesToInput(
       pastePortState.activeInput,
-      candidates,
+      files,
       settings
     );
 
@@ -274,8 +246,7 @@
     }
 
     const skipped = (result.rejected?.length || 0)
-      + (result.ignored?.length || 0)
-      + preparationErrors.length;
+      + (result.ignored?.length || 0);
     const message = skipped
       ? `${result.message} ${i18n.t("content.filesSkipped", { count: skipped })}`
       : result.message;
@@ -301,11 +272,19 @@
       const separator = response.item.dataUrl.indexOf(",");
       const binary = atob(response.item.dataUrl.slice(separator + 1));
       const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-      const file = new File([bytes], response.item.name, {
-        type: response.item.type,
-        lastModified: Date.now()
-      });
-      return onFilesCallback([file], "history");
+      const prepared = await injector.createPastedFile(
+        new Blob([bytes], { type: response.item.type }),
+        settings.defaultFileName
+      );
+      if (!prepared.success) {
+        return {
+          success: false,
+          message: prepared.message,
+          closeAfterMs: null
+        };
+      }
+
+      return onFilesCallback([prepared.file]);
     } catch (error) {
       debug("Falha ao reconstruir item do histórico.", error);
       return {

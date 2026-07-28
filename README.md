@@ -16,18 +16,17 @@
 
 ## ✨ What is it?
 
-**PastePort** is a Chromium browser extension that turns `Ctrl+V` into a real file for image upload fields.
+**PastePort** is a Chromium browser extension that turns recent clipboard images into real files for image upload fields.
 
-Copied an image? Just click the upload field and paste. The extension converts the clipboard image into a valid `File` object and delivers it to the site through `input` and `change` events — exactly as if you had selected the file manually.
+Copied an image? Just click the upload field and select it from the clipboard gallery. The extension converts the image into a valid `File` object and delivers it to the site through `input` and `change` events — exactly as if you had selected the file manually.
 
-> No temporary downloads. No dragging files. No hassle.
+> No temporary downloads. No manual pasting. No hassle.
 
 ---
 
 ## 🚀 Features
 
-- 📋 **Direct paste** — `Ctrl+V` becomes an image file in the input.
-- 🖼️ **Recent gallery** — up to 10 clipboard images available instantly.
+- 📋 **Clipboard gallery** — up to 10 recent images available instantly.
 - 🌑 **Shadow DOM support** — works with open components and compatible frames.
 - 🎯 **Smart detection** — labels, dropzones, custom buttons, and dynamic inputs are recognized.
 - 🖱️ **Drag-and-drop** — drag one or many images straight into the modal.
@@ -61,7 +60,7 @@ The browser will ask for permission to read copied and pasted data. This is only
 1. **Copy** an image (screenshot, web image, image editor…).
 2. **Click** an upload field, label, button, or image drop area.
 3. The **PastePort** balloon appears next to your click.
-4. Choose an image from the gallery or press **`Ctrl+V`** to paste a new one.
+4. Choose an image from the clipboard gallery.
 5. Done — the site receives the file normally.
 
 > **`Escape`**, the close button, or clicking outside the modal closes it. The **Select from computer** button opens the browser's native file picker.
