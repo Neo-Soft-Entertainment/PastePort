@@ -1,6 +1,11 @@
 (() => {
   "use strict";
 
+  const i18n = globalThis.__pastePortI18n;
+  if (!i18n) {
+    return;
+  }
+
   const DATABASE_NAME = "pasteport-clipboard-history";
   const STORE_NAME = "images";
   const HISTORY_LIMIT = 10;
@@ -181,7 +186,7 @@
 
       let settled = false;
       const timeout = setTimeout(() => {
-        finish(new Error("Tempo esgotado ao ler a área de transferência."));
+        finish(new Error(i18n.t("offscreen.clipboardTimeout")));
       }, 500);
 
       function finish(error, blobs = []) {
@@ -225,7 +230,7 @@
 
       try {
         if (!document.execCommand("paste")) {
-          finish(new Error("O navegador bloqueou a leitura da área de transferência."));
+          finish(new Error(i18n.t("offscreen.clipboardBlocked")));
         }
       } catch (error) {
         finish(error);
@@ -358,7 +363,7 @@
       try {
         await captureClipboard();
       } catch (error) {
-        warning = "Não foi possível ler o item atual da área de transferência.";
+        warning = i18n.t("offscreen.currentItemError");
       }
 
       return {
@@ -373,7 +378,7 @@
       if (!record) {
         return {
           success: false,
-          message: "Esta imagem não está mais no histórico."
+          message: i18n.t("offscreen.imageNotInHistory")
         };
       }
 
@@ -406,7 +411,7 @@
 
     return {
       success: false,
-      message: "Operação de histórico desconhecida."
+      message: i18n.t("offscreen.unknownOperation")
     };
   }
 
@@ -420,7 +425,7 @@
       .catch((error) => {
         sendResponse({
           success: false,
-          message: error.message || "Não foi possível acessar o histórico local."
+          message: error.message || i18n.t("offscreen.historyAccessError")
         });
       });
 

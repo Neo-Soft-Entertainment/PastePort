@@ -1,5 +1,42 @@
 "use strict";
 
+function resolveServiceLocale() {
+  try {
+    const locale = chrome.i18n?.getUILanguage?.();
+    if (locale) {
+      const base = locale.split(/[-_]/)[0].toLowerCase();
+      if (base === "en" || base === "es") {
+        return base;
+      }
+    }
+  } catch (error) {
+    // ignore
+  }
+
+  return "pt-BR";
+}
+
+const SERVICE_LOCALE = resolveServiceLocale();
+
+const SERVICE_MESSAGES = Object.freeze({
+  "pt-BR": Object.freeze({
+    historyAccessError: "Não foi possível acessar o histórico local.",
+    offscreenJustification: "Manter localmente a galeria de imagens recentes da área de transferência."
+  }),
+  "en": Object.freeze({
+    historyAccessError: "Could not access local history.",
+    offscreenJustification: "Keep the recent clipboard image gallery stored locally."
+  }),
+  "es": Object.freeze({
+    historyAccessError: "No se pudo acceder al historial local.",
+    offscreenJustification: "Mantener localmente la galería de imágenes recientes del portapapeles."
+  })
+});
+
+function getServiceMessage(key) {
+  return SERVICE_MESSAGES[SERVICE_LOCALE][key] || SERVICE_MESSAGES["pt-BR"][key] || key;
+}
+
 const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   onlyImageUploads: true,
@@ -87,7 +124,7 @@ async function ensureOffscreenDocument() {
     creatingOffscreenDocument = chrome.offscreen.createDocument({
       url: OFFSCREEN_PATH,
       reasons: ["CLIPBOARD"],
-      justification: "Manter localmente a galeria de imagens recentes da área de transferência."
+      justification: getServiceMessage("offscreenJustification")
     });
   }
 
@@ -146,7 +183,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     .catch((error) => {
       sendResponse({
         success: false,
-        message: error.message || "Não foi possível acessar o histórico local."
+        message: error.message || getServiceMessage("historyAccessError")
       });
     });
 

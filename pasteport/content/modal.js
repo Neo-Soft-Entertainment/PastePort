@@ -1,6 +1,11 @@
 (() => {
   "use strict";
 
+  const i18n = globalThis.__pastePortI18n;
+  if (!i18n) {
+    return;
+  }
+
   let stylesheetUrl;
   try {
     stylesheetUrl = chrome.runtime.getURL("content/styles.css");
@@ -20,6 +25,9 @@
     onNativePicker,
     onClose
   }) {
+    const locale = settings.language === "auto" ? null : settings.language;
+    i18n.setLocale(locale);
+
     let previousFocus = document.activeElement;
     while (previousFocus?.shadowRoot?.activeElement) {
       previousFocus = previousFocus.shadowRoot.activeElement;
@@ -46,6 +54,7 @@
     const overlay = document.createElement("div");
     overlay.className = "pp-overlay";
     overlay.dataset.theme = settings.theme;
+    overlay.lang = i18n.getLocale();
     overlay.innerHTML = `
       <div class="pp-bubble">
         <section class="pp-dialog" role="dialog" aria-modal="true" aria-labelledby="pp-title" aria-describedby="pp-description">
@@ -54,7 +63,7 @@
               <span class="pp-logo" aria-hidden="true">P</span>
               <span>PastePort</span>
             </div>
-            <button class="pp-close" type="button" aria-label="Fechar modal">
+            <button class="pp-close" type="button" aria-label="${escapeHtml(i18n.t("modal.closeAriaLabel"))}">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18"></path>
               </svg>
@@ -62,8 +71,8 @@
           </header>
 
           <div class="pp-heading">
-            <h1 id="pp-title">Adicionar imagem</h1>
-            <p id="pp-description">Use a imagem da área de transferência ou escolha um arquivo.</p>
+            <h1 id="pp-title">${escapeHtml(i18n.t("modal.addImage"))}</h1>
+            <p id="pp-description">${escapeHtml(i18n.t("modal.description"))}</p>
           </div>
 
           <div class="pp-clipboard-heading">
@@ -72,53 +81,53 @@
                 <path d="M9 5.5h6M9.5 3h5a1 1 0 0 1 1 1v3h-7V4a1 1 0 0 1 1-1Z"></path>
                 <path d="M8.5 5H6.8A1.8 1.8 0 0 0 5 6.8v12.4A1.8 1.8 0 0 0 6.8 21h10.4a1.8 1.8 0 0 0 1.8-1.8V6.8A1.8 1.8 0 0 0 17.2 5h-1.7"></path>
               </svg>
-              Área de transferência
+              ${escapeHtml(i18n.t("modal.clipboardTitle"))}
             </span>
             <span class="pp-clipboard-actions">
-              <span class="pp-clipboard-badge">Carregando…</span>
-              <button class="pp-clear-history" type="button" hidden>Limpar</button>
+              <span class="pp-clipboard-badge">${escapeHtml(i18n.t("modal.loading"))}</span>
+              <button class="pp-clear-history" type="button" hidden>${escapeHtml(i18n.t("modal.clear"))}</button>
             </span>
           </div>
 
           <div class="pp-history-panel">
-            <div class="pp-history-loading" role="status">Lendo imagens recentes…</div>
-            <div class="pp-history-list" role="list" aria-label="Imagens recentes da área de transferência" hidden></div>
+            <div class="pp-history-loading" role="status">${escapeHtml(i18n.t("modal.historyLoading"))}</div>
+            <div class="pp-history-list" role="list" aria-label="${escapeHtml(i18n.t("modal.historyListAriaLabel"))}" hidden></div>
             <div class="pp-history-empty" hidden>
-              <strong>Nenhuma imagem recente</strong>
-              <span>As próximas imagens copiadas aparecerão aqui.</span>
+              <strong>${escapeHtml(i18n.t("modal.historyEmptyTitle"))}</strong>
+              <span>${escapeHtml(i18n.t("modal.historyEmptyHint"))}</span>
             </div>
           </div>
 
           <div class="pp-paste-zone" contenteditable="true" role="textbox" tabindex="0"
-            spellcheck="false" aria-label="Área de transferência para colar ou arrastar imagens">
+            spellcheck="false" aria-label="${escapeHtml(i18n.t("modal.pasteZoneAriaLabel"))}">
             <div class="pp-empty-state">
               <div class="pp-zone-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                   <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path>
                 </svg>
               </div>
-              <strong>Cole outra imagem agora</strong>
-              <span>Pressione <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
-              <small class="pp-drop-copy">ou arraste imagens para esta área</small>
+              <strong>${escapeHtml(i18n.t("modal.pasteNow"))}</strong>
+              <span>${escapeHtml(i18n.t("modal.press"))} <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
+              <small class="pp-drop-copy">${escapeHtml(i18n.t("modal.orDrop"))}</small>
             </div>
-            <div class="pp-preview-grid" aria-label="Pré-visualização da área de transferência" hidden></div>
+            <div class="pp-preview-grid" aria-label="${escapeHtml(i18n.t("modal.previewGridAriaLabel"))}" hidden></div>
           </div>
 
           <div class="pp-status" role="status" aria-live="polite" hidden></div>
 
           <div class="pp-separator" aria-hidden="true">
-            <span></span><em>ou</em><span></span>
+            <span></span><em>${escapeHtml(i18n.t("modal.separator"))}</em><span></span>
           </div>
 
           <button class="pp-native-button" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M3.5 7.5h6l2-2h9v13h-17z"></path>
             </svg>
-            Selecionar do computador
+            ${escapeHtml(i18n.t("modal.selectFromComputer"))}
           </button>
 
           <p class="pp-privacy">
-            A imagem é processada apenas neste dispositivo.
+            ${escapeHtml(i18n.t("modal.privacyNote"))}
           </p>
         </section>
       </div>
@@ -152,6 +161,15 @@
 
     if (!settings.dragDropEnabled) {
       overlay.querySelector(".pp-drop-copy").hidden = true;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     }
 
     function setBusy(busy) {
@@ -197,19 +215,19 @@
           previewUrls.push(url);
           image.src = url;
           image.alt = source === "paste"
-            ? `Prévia da imagem colada ${index + 1}`
-            : `Prévia de ${file.name || `imagem ${index + 1}`}`;
+            ? i18n.t("modal.pastedPreview", { index: index + 1 })
+            : i18n.t("modal.namedPreview", { name: file.name || i18n.t("modal.imageN", { index: index + 1 }) });
           figure.append(image);
         } else {
           const placeholder = document.createElement("span");
           placeholder.className = "pp-file-placeholder";
-          placeholder.textContent = "ARQ";
+          placeholder.textContent = i18n.t("modal.filePlaceholder");
           figure.append(placeholder);
         }
 
         caption.textContent = source === "paste"
-          ? `Imagem ${index + 1}`
-          : file.name || `Arquivo ${index + 1}`;
+          ? i18n.t("modal.imageN", { index: index + 1 })
+          : file.name || i18n.t("modal.fileN", { index: index + 1 });
         figure.append(caption);
         previewGrid.append(figure);
       }
@@ -218,7 +236,7 @@
         const remaining = document.createElement("span");
         remaining.className = "pp-preview-more";
         remaining.textContent = `+${files.length - 6}`;
-        remaining.setAttribute("aria-label", `Mais ${files.length - 6} arquivos`);
+        remaining.setAttribute("aria-label", i18n.t("modal.moreFiles", { count: files.length - 6 }));
         previewGrid.append(remaining);
       }
 
@@ -226,12 +244,7 @@
     }
 
     function historyTime(timestamp) {
-      return new Intl.DateTimeFormat("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      }).format(new Date(timestamp));
+      return i18n.dateTime().format(new Date(timestamp));
     }
 
     function renderHistory(items) {
@@ -241,10 +254,10 @@
       historyEmpty.hidden = items.length > 0;
       clearHistoryButton.hidden = items.length === 0;
       clearHistoryButton.classList.remove("is-confirming");
-      clearHistoryButton.textContent = "Limpar";
+      clearHistoryButton.textContent = i18n.t("modal.clear");
       clipboardBadge.textContent = items.length === 1
-        ? "1 imagem recente"
-        : `${items.length} imagens recentes`;
+        ? i18n.t("modal.recentImagesOne")
+        : i18n.t("modal.recentImagesMany", { count: items.length });
 
       for (const item of items) {
         const card = document.createElement("article");
@@ -255,7 +268,7 @@
         selectButton.className = "pp-history-select";
         selectButton.type = "button";
         selectButton.dataset.historyId = item.id;
-        selectButton.setAttribute("aria-label", `Usar imagem copiada em ${historyTime(item.createdAt)}`);
+        selectButton.setAttribute("aria-label", i18n.t("modal.useImageAt", { time: historyTime(item.createdAt) }));
 
         if (item.thumbnail) {
           const image = document.createElement("img");
@@ -277,7 +290,7 @@
         removeButton.className = "pp-remove-history";
         removeButton.type = "button";
         removeButton.dataset.removeHistoryId = item.id;
-        removeButton.setAttribute("aria-label", `Remover imagem copiada em ${historyTime(item.createdAt)}`);
+        removeButton.setAttribute("aria-label", i18n.t("modal.removeImageAt", { time: historyTime(item.createdAt) }));
         removeButton.textContent = "×";
 
         card.append(selectButton, removeButton);
@@ -295,7 +308,7 @@
 
       if (!response.success) {
         historyLoading.textContent = response.message;
-        clipboardBadge.textContent = "Indisponível";
+        clipboardBadge.textContent = i18n.t("modal.unavailable");
         return;
       }
 
@@ -313,7 +326,7 @@
       clearTimeout(closeTimer);
       closeTimer = null;
       setBusy(true);
-      setStatus("Inserindo imagem do histórico…");
+      setStatus(i18n.t("modal.insertingFromHistory"));
 
       try {
         const result = await onHistorySelect(id);
@@ -323,7 +336,7 @@
           closeTimer = setTimeout(() => close("history-item-inserted"), result.closeAfterMs);
         }
       } catch (error) {
-        setStatus("Não foi possível inserir esta imagem do histórico.", "error");
+        setStatus(i18n.t("modal.insertHistoryError"), "error");
       } finally {
         setBusy(false);
       }
@@ -343,9 +356,9 @@
         }
 
         renderHistory(response.items || []);
-        setStatus("Imagem removida do histórico.", "success");
+        setStatus(i18n.t("modal.imageRemoved"), "success");
       } catch (error) {
-        setStatus("Não foi possível remover esta imagem.", "error");
+        setStatus(i18n.t("modal.removeError"), "error");
       } finally {
         setBusy(false);
       }
@@ -456,8 +469,8 @@
       if (!files.length) {
         setStatus(
           source === "paste"
-            ? "Nenhuma imagem foi encontrada na área de transferência."
-            : "Nenhuma imagem válida foi encontrada nos arquivos arrastados.",
+            ? i18n.t("modal.noClipboardImage")
+            : i18n.t("modal.noDroppedImage"),
           "error"
         );
         return;
@@ -465,7 +478,7 @@
 
       showPreview(files, source);
       setBusy(true);
-      setStatus(source === "paste" ? "Processando imagem…" : "Validando arquivos…");
+      setStatus(source === "paste" ? i18n.t("modal.processingImage") : i18n.t("modal.validatingFiles"));
 
       try {
         const result = await onFiles(files, source);
@@ -475,7 +488,7 @@
           closeTimer = setTimeout(() => close("files-inserted"), result.closeAfterMs);
         }
       } catch (error) {
-        setStatus("Não foi possível inserir a imagem neste campo.", "error");
+        setStatus(i18n.t("modal.insertError"), "error");
       } finally {
         setBusy(false);
       }
@@ -556,11 +569,11 @@
 
       if (!clearHistoryButton.classList.contains("is-confirming")) {
         clearHistoryButton.classList.add("is-confirming");
-        clearHistoryButton.textContent = "Confirmar";
+        clearHistoryButton.textContent = i18n.t("modal.clearConfirm");
         clearTimeout(clearConfirmationTimer);
         clearConfirmationTimer = setTimeout(() => {
           clearHistoryButton.classList.remove("is-confirming");
-          clearHistoryButton.textContent = "Limpar";
+          clearHistoryButton.textContent = i18n.t("modal.clear");
         }, 4000);
         return;
       }
@@ -575,11 +588,11 @@
         }
 
         clearHistoryButton.classList.remove("is-confirming");
-        clearHistoryButton.textContent = "Limpar";
+        clearHistoryButton.textContent = i18n.t("modal.clear");
         renderHistory([]);
-        setStatus("Histórico local removido.", "success");
+        setStatus(i18n.t("modal.historyCleared"), "success");
       } catch (error) {
-        setStatus("Não foi possível limpar o histórico.", "error");
+        setStatus(i18n.t("modal.clearError"), "error");
       } finally {
         setBusy(false);
       }

@@ -1,6 +1,11 @@
 (() => {
   "use strict";
 
+  const i18n = globalThis.__pastePortI18n;
+  if (!i18n) {
+    return;
+  }
+
   const MIME_EXTENSIONS = Object.freeze({
     "image/png": ".png",
     "image/jpeg": ".jpg",
@@ -105,7 +110,7 @@
     return FORMAT_NAMES[type]
       || FORMAT_NAMES[extensionFromName(file?.name)]
       || type.replace(/^image\//, "").toUpperCase()
-      || "desconhecido";
+      || i18n.t("injector.unknown");
   }
 
   function acceptedFormats(input) {
@@ -113,7 +118,7 @@
       .filter((rule) => rule === "image/*" || rule.startsWith("image/") || rule.startsWith("."))
       .map((rule) => {
         if (rule === "image/*") {
-          return "qualquer imagem";
+          return i18n.t("injector.anyImage");
         }
 
         return FORMAT_NAMES[rule] || rule.replace(/^image\//, "").toUpperCase();
@@ -125,10 +130,15 @@
   function acceptError(input, file) {
     const formats = acceptedFormats(input);
     const suffix = formats.length
-      ? ` Formatos aceitos: ${new Intl.ListFormat("pt-BR", { type: "conjunction" }).format(formats)}.`
+      ? i18n.t("injector.acceptedFormats", {
+          formats: i18n.list(formats)
+        })
       : "";
 
-    return `Este campo não aceita imagens do tipo ${formatName(file)}.${suffix}`;
+    return i18n.t("injector.acceptError", {
+      type: formatName(file),
+      formats: suffix
+    });
   }
 
   function inputError(input) {
@@ -136,7 +146,7 @@
       return {
         success: false,
         code: "input-removed",
-        message: "O campo de upload foi removido da página. Tente abrir o upload novamente."
+        message: i18n.t("injector.inputRemoved")
       };
     }
 
@@ -144,7 +154,7 @@
       return {
         success: false,
         code: "input-disabled",
-        message: "Este campo de upload está desabilitado."
+        message: i18n.t("injector.inputDisabled")
       };
     }
 
@@ -152,7 +162,7 @@
       return {
         success: false,
         code: "invalid-input",
-        message: "O campo de upload original não está mais disponível."
+        message: i18n.t("injector.inputInvalid")
       };
     }
 
@@ -160,6 +170,8 @@
   }
 
   function assignFilesToInput(input, files, settings = {}) {
+    i18n.setLocale(settings.language === "auto" ? null : settings.language);
+
     const invalidInput = inputError(input);
     if (invalidInput) {
       return invalidInput;
@@ -169,7 +181,7 @@
       return {
         success: false,
         code: "data-transfer-unsupported",
-        message: "Este navegador não oferece suporte à inserção de arquivos pelo PastePort."
+        message: i18n.t("injector.dataTransferUnsupported")
       };
     }
 
@@ -181,7 +193,7 @@
         rejected.push({
           file,
           code: "not-image",
-          message: `"${file?.name || "Arquivo"}" não é uma imagem reconhecida.`
+          message: i18n.t("injector.notAnImage", { name: file?.name || i18n.t("modal.fileN", { index: 1 }) })
         });
         continue;
       }
@@ -202,7 +214,7 @@
       return {
         success: false,
         code: rejected[0]?.code || "no-valid-files",
-        message: rejected[0]?.message || "Nenhuma imagem válida foi encontrada.",
+        message: rejected[0]?.message || i18n.t("content.noValidImage"),
         rejected
       };
     }
@@ -219,15 +231,15 @@
       file,
       code: input.multiple ? "limit-exceeded" : "multiple-not-supported",
       message: input.multiple
-        ? `O limite de ${maxFiles} arquivos foi atingido.`
-        : "Este campo aceita somente um arquivo."
+        ? i18n.t("injector.limitReached", { maxFiles })
+        : i18n.t("injector.singleFileOnly")
     }));
 
     if (!selected.length) {
       return {
         success: false,
         code: "limit-exceeded",
-        message: `O limite de ${maxFiles} arquivos já foi atingido.`,
+        message: i18n.t("injector.limitAlreadyReached", { maxFiles }),
         rejected,
         ignored
       };
@@ -246,7 +258,7 @@
       return {
         success: false,
         code: "assignment-blocked",
-        message: "O site ou o navegador bloqueou a inserção dos arquivos.",
+        message: i18n.t("injector.assignmentBlocked"),
         error
       };
     }
@@ -255,7 +267,7 @@
       return {
         success: false,
         code: "assignment-blocked",
-        message: "O site não aceitou os arquivos inseridos pelo PastePort."
+        message: i18n.t("injector.siteRejected")
       };
     }
 
@@ -273,8 +285,8 @@
       success: true,
       code: "files-assigned",
       message: selected.length === 1
-        ? "Imagem adicionada com sucesso."
-        : `${selected.length} imagens adicionadas com sucesso.`,
+        ? i18n.t("injector.imageAdded")
+        : i18n.t("injector.imagesAdded", { count: selected.length }),
       files: finalFiles,
       added: selected,
       rejected,
@@ -363,7 +375,7 @@
       return {
         success: false,
         code: "unknown-image-type",
-        message: `O formato ${formatName(blob)} não pôde ser identificado com segurança.`
+        message: i18n.t("injector.unknownType", { type: formatName(blob) })
       };
     }
 

@@ -19,6 +19,7 @@
         "https://*/*"
       ],
       "js": [
+        "shared/i18n.js",
         "content/upload-detector.js",
         "content/file-injector.js",
         "content/modal.js",

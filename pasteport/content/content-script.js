@@ -4,12 +4,13 @@
   const detector = globalThis.__pastePortUploadDetector;
   const injector = globalThis.__pastePortFileInjector;
   const modalFactory = globalThis.__pastePortModal;
+  const i18n = globalThis.__pastePortI18n;
 
   delete globalThis.__pastePortUploadDetector;
   delete globalThis.__pastePortFileInjector;
   delete globalThis.__pastePortModal;
 
-  if (!detector || !injector || !modalFactory) {
+  if (!detector || !injector || !modalFactory || !i18n) {
     return;
   }
 
@@ -23,6 +24,7 @@
     maxFiles: 10,
     defaultFileName: "pasteport",
     theme: "auto",
+    language: "auto",
     debug: false,
     combineExistingFiles: false
   });
@@ -120,26 +122,26 @@
             if (error) {
               resolve({
                 success: false,
-                message: "Não foi possível acessar o histórico da área de transferência."
+                message: i18n.t("content.historyAccessError")
               });
               return;
             }
 
             resolve(response || {
               success: false,
-              message: "O histórico da área de transferência não respondeu."
+              message: i18n.t("content.historyNoResponse")
             });
           } catch (error) {
             resolve({
               success: false,
-              message: "A extensão foi recarregada. Atualize esta página para reativar o PastePort."
+              message: i18n.t("content.extensionReloaded")
             });
           }
         });
       } catch (error) {
         resolve({
           success: false,
-          message: "A extensão foi recarregada. Atualize esta página para reativar o PastePort."
+          message: i18n.t("content.extensionReloaded")
         });
       }
     });
@@ -251,7 +253,7 @@
       debug("Falha ao preparar imagem colada.", error);
       return {
         success: false,
-        message: error?.message || "Nenhuma imagem válida foi encontrada.",
+        message: error?.message || i18n.t("content.noValidImage"),
         closeAfterMs: null
       };
     }
@@ -275,7 +277,7 @@
       + (result.ignored?.length || 0)
       + preparationErrors.length;
     const message = skipped
-      ? `${result.message} ${skipped} arquivo(s) foram ignorados ou rejeitados.`
+      ? `${result.message} ${i18n.t("content.filesSkipped", { count: skipped })}`
       : result.message;
 
     return {
@@ -308,7 +310,7 @@
       debug("Falha ao reconstruir item do histórico.", error);
       return {
         success: false,
-        message: "Não foi possível recuperar esta imagem do histórico.",
+        message: i18n.t("content.historyReconstructError"),
         closeAfterMs: null
       };
     }
@@ -429,7 +431,9 @@
         queueMicrotask(() => {
           openModal(input);
           modal?.setStatus(
-            "O navegador bloqueou o seletor nativo. Clique novamente em “Selecionar do computador”.",
+            i18n.t("content.nativePickerBlocked", {
+              selectFromComputer: i18n.t("modal.selectFromComputer")
+            }),
             "error"
           );
         });
