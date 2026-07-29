@@ -38,9 +38,13 @@ Copied an image? Just click the upload field and select it from the clipboard ga
 
 ## 📦 Installation
 
-### From the store (coming soon)
+### From the Chrome Web Store
 
-> PastePort is not yet published on the Chrome Web Store. To try it, use the local installation below.
+PastePort is officially published on the Chrome Web Store:
+
+https://chromewebstore.google.com/detail/pasteport/cjopgpdaajiblomfhjcdjegionhdliph
+
+Official published version: **1.1.1**.
 
 ### Locally
 
