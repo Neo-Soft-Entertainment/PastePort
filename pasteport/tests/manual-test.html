@@ -68,6 +68,35 @@
         text-align: center;
       }
 
+      .overlap-dropzone {
+        position: relative;
+        min-height: 120px;
+        padding-bottom: 64px;
+      }
+
+      .overlap-text {
+        position: absolute;
+        right: 16px;
+        bottom: 16px;
+        left: 16px;
+        box-sizing: border-box;
+        padding: 9px 10px;
+        cursor: text;
+      }
+
+      .overlap-panel {
+        position: absolute;
+        top: 52px;
+        right: 16px;
+        left: 16px;
+        z-index: 2;
+        padding: 9px 10px;
+        border-radius: 6px;
+        background: #f6bf2688;
+        color: #1f1b10;
+        cursor: default;
+      }
+
       .hidden {
         display: none;
       }
@@ -190,6 +219,17 @@
             </body>
           </html>
         '></iframe>
+      </section>
+
+      <section class="upload-area">
+        <h2>13. Camadas sobre dropzone</h2>
+        <div class="dropzone overlap-dropzone">
+          Clique na área livre para enviar imagem
+          <input class="hidden" type="file" accept="image/*" data-output="overlap-output">
+          <div class="overlap-panel">Esta camada não deve abrir o PastePort</div>
+          <input class="overlap-text" type="text" placeholder="Este campo deve receber foco normalmente">
+        </div>
+        <output id="overlap-output">Nenhum arquivo</output>
       </section>
     </main>
 

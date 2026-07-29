@@ -191,6 +191,28 @@
     return collectFileInputs(label, 2)[0] || null;
   }
 
+  function isEditableControl(element) {
+    if (element.localName === "input") {
+      return element.type !== "file";
+    }
+
+    return element.localName === "textarea"
+      || element.localName === "select"
+      || element.isContentEditable;
+  }
+
+  function isLayeredElement(element) {
+    const style = element.ownerDocument?.defaultView?.getComputedStyle?.(element);
+    if (!style || style.display === "none" || style.visibility === "hidden") {
+      return false;
+    }
+
+    return style.position === "absolute"
+      || style.position === "fixed"
+      || style.position === "sticky"
+      || style.zIndex !== "auto";
+  }
+
   function describedElementInputs(element) {
     const ids = [
       element.getAttribute("aria-controls"),
@@ -216,6 +238,10 @@
   }
 
   function hasUploadHint(element) {
+    if (isEditableControl(element)) {
+      return false;
+    }
+
     const attributes = [
       element.id,
       element.className,
@@ -244,6 +270,77 @@
     return TRIGGER_TEXT_HINT.test((element.textContent || "").trim().slice(0, 160));
   }
 
+  function blocksUploadAncestor(element, trigger = null) {
+    if (isEditableControl(element)) {
+      return true;
+    }
+
+    if (element.localName === "a" && element.href) {
+      return !hasUploadHint(element);
+    }
+
+    if (element.localName === "button" || element.getAttribute("role") === "button") {
+      return !hasUploadHint(element);
+    }
+
+    if (!trigger) {
+      return false;
+    }
+
+    if (!trigger.contains(element)) {
+      return true;
+    }
+
+    if (trigger.localName === "button"
+      || trigger.localName === "label"
+      || trigger.getAttribute("role") === "button") {
+      return false;
+    }
+
+    if (hasUploadHint(element)) {
+      return false;
+    }
+
+    return isLayeredElement(element);
+  }
+
+  function pointFromEvent(event, interaction) {
+    if (Number.isFinite(event.clientX)
+      && Number.isFinite(event.clientY)
+      && (event.isTrusted || event.clientX !== 0 || event.clientY !== 0)) {
+      return { x: event.clientX, y: event.clientY };
+    }
+
+    if (Number.isFinite(interaction?.point?.x) && Number.isFinite(interaction.point.y)) {
+      return interaction.point;
+    }
+
+    return null;
+  }
+
+  function visualBlocker(event, trigger, interaction) {
+    const point = pointFromEvent(event, interaction);
+    const root = trigger.getRootNode?.();
+    const elementsFromPoint = root?.elementsFromPoint
+      || trigger.ownerDocument?.elementsFromPoint;
+
+    if (!point || typeof elementsFromPoint !== "function") {
+      return null;
+    }
+
+    const stackedElements = elementsFromPoint
+      .call(root?.elementsFromPoint ? root : trigger.ownerDocument, point.x, point.y)
+      .filter((element) => element?.nodeType === Node.ELEMENT_NODE);
+    const triggerIndex = stackedElements.indexOf(trigger);
+    if (triggerIndex < 1) {
+      return null;
+    }
+
+    return stackedElements
+      .slice(0, triggerIndex)
+      .find((element) => blocksUploadAncestor(element, trigger)) || null;
+  }
+
   function resultFromCandidates(candidates, source, settings) {
     const inputs = uniqueEligibleInputs(candidates, settings);
 
@@ -258,7 +355,7 @@
     return null;
   }
 
-  function findAssociatedInput(event, settings = {}) {
+  function findAssociatedInput(event, settings = {}, interaction = null) {
     const path = typeof event.composedPath === "function"
       ? event.composedPath()
       : [event.target];
@@ -268,6 +365,27 @@
     for (const element of elements) {
       if (!isFileInput(element)) {
         continue;
+      }
+
+      if (!event.isTrusted && interaction) {
+        const interactionPath = Array.isArray(interaction.path)
+          ? interaction.path
+          : [interaction.target].filter(Boolean);
+        const interactionDetection = findAssociatedInput({
+          isTrusted: true,
+          target: interaction.target,
+          clientX: interaction.point?.x ?? 0,
+          clientY: interaction.point?.y ?? 0,
+          composedPath: () => interactionPath
+        }, settings);
+
+        if (interactionDetection.input !== element) {
+          return {
+            input: null,
+            reason: "blocked-by-interaction-target",
+            target: interaction.target
+          };
+        }
       }
 
       if (getImageEligibility(element, settings).eligible) {
@@ -304,6 +422,19 @@
     const trigger = elements.find(hasUploadHint);
     if (!trigger) {
       return { input: null, reason: "no-upload-trigger" };
+    }
+
+    const triggerIndex = elements.indexOf(trigger);
+    const blocker = elements
+      .slice(0, triggerIndex)
+      .find((element) => blocksUploadAncestor(element, trigger));
+    if (blocker) {
+      return { input: null, reason: "blocked-by-interactive-element", blocker };
+    }
+
+    const layer = visualBlocker(event, trigger, interaction);
+    if (layer) {
+      return { input: null, reason: "blocked-by-visual-layer", blocker: layer };
     }
 
     let container = trigger;

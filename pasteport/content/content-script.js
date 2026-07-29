@@ -34,6 +34,7 @@
     modalOpen: false,
     allowNativePicker: false,
     lastInteractionTarget: null,
+    lastInteractionPath: null,
     lastInteractionPoint: null,
     pendingDetection: false
   };
@@ -375,6 +376,9 @@
   }
 
   function trackPointer(event) {
+    pastePortState.lastInteractionPath = typeof event.composedPath === "function"
+      ? event.composedPath()
+      : [event.target];
     pastePortState.lastInteractionTarget = event.target;
     pastePortState.lastInteractionPoint = {
       x: event.clientX,
@@ -434,7 +438,15 @@
       return;
     }
 
-    const detection = detector.findAssociatedInput(event, settings);
+    const interaction = pastePortState.lastInteractionPoint
+      && performance.now() - pastePortState.lastInteractionPoint.time < 1200
+      ? {
+        target: pastePortState.lastInteractionTarget,
+        path: pastePortState.lastInteractionPath,
+        point: pastePortState.lastInteractionPoint
+      }
+      : null;
+    const detection = detector.findAssociatedInput(event, settings, interaction);
     if (!detection.input) {
       if (detection.reason === "multiple-inputs") {
         debug("Mais de um campo de imagem corresponde a este controle; clique preservado.", detection.candidates);
