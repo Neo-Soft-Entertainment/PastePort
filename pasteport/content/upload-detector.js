@@ -68,7 +68,11 @@
 
     const rules = parseAccept(input);
     if (!rules.length) {
-      return { eligible: true, ambiguous: true };
+      if (settings.onlyImageUploads === false) {
+        return { eligible: true, ambiguous: true };
+      }
+
+      return { eligible: false, reason: "accept-missing" };
     }
 
     const acceptsImages = rules.some((rule) => {
